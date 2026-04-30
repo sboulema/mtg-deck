@@ -2,6 +2,8 @@
 
 This is a plugin to manage your Magic: The Gathering card collections and decks as Obsidian notes.
 
+This is a fork from the original [obsidian-mtg](https://github.com/omardelarosa/obsidian-mtg) plugin which seems unmaintained.
+
 ## Decklists
 
 Using the `mtg-deck` syntax hint in any Markdown file, you can define your decklists as follows:
