@@ -1,0 +1,71 @@
+name: MtG Deck
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+
+permissions:
+  contents: read
+
+env:
+  version: '1.0.${{ github.run_number }}'
+  nodeVersion: '18'
+
+jobs:
+  build:
+    name: 🛠️ Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.nodeVersion }}.x
+
+      - name: Build plugin
+        run: |
+          npm install
+          npm run build
+
+      - name: Publish Build Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: mtg-deck
+          path: |
+            main.js
+            manifest.json
+            styles.css
+
+  release:
+    if: github.ref_name == 'main'
+    name: 🚚 Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: Release
+    permissions:
+        contents: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: mtg-deck
+
+      - name: Tag release
+        id: tag_release
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          custom_tag: '${{ env.version }}'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1.21.0
+        with:
+          tag: ${{ steps.tag_release.outputs.new_tag }}
+          name: ${{ steps.tag_release.outputs.new_tag }}
+          body: ${{ steps.tag_release.outputs.changelog }}
+          artifacts: 'main.js,manifest.json,styles.css'
+          skipIfReleaseExists: true
