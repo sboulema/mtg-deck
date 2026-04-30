@@ -75,7 +75,7 @@ export default class ObsidianPluginMtg extends Plugin {
 					error = err;
 					console.log(err);
 					const errorNode = document.createDiv({
-						text: error,
+						text: String(error),
 						cls: "obsidian-plugin-mtg-error",
 					});
 					el.appendChild(errorNode);
@@ -166,8 +166,8 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 					.addOption("usd", "USD")
 					.addOption("eur", "EUR")
 					.addOption("tix", "Tix")
-					.onChange(async (value: "usd" | "eur" | "tix") => {
-						this.plugin.settings.decklist.preferredCurrency = value;
+					.onChange(async (value: string) => {
+						this.plugin.settings.decklist.preferredCurrency = value as "usd" | "eur" | "tix";
 						await this.plugin.saveSettings();
 					})
 			);
