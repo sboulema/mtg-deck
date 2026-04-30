@@ -1,7 +1,5 @@
 main.js
 node_modules/
-.husky
-.circleci
 jest/
 jest.config.js
 *.md
