@@ -9,7 +9,10 @@ updates:
   groups:
     typescript-eslint:
       patterns:
-        - "@typescript-eslint.*"
+        - "@typescript-eslint*"
+    jest:
+      patterns:
+        - "jest*"
 
 - package-ecosystem: github-actions
   directory: "/"
