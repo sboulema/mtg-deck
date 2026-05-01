@@ -8,6 +8,7 @@ import {
 } from "src/collection";
 import { renderDecklist } from "src/renderer";
 import { ObsidianPluginMtgSettings } from "src/settings";
+import { CardCounts } from "src/collection";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
@@ -29,7 +30,7 @@ export default class ObsidianPluginMtg extends Plugin {
 	settings: ObsidianPluginMtgSettings;
 
 	// This keeps a record of the collection in memory
-	cardCounts: Record<string, number>;
+	cardCounts: CardCounts;
 
 	async onload() {
 		await this.loadSettings();
@@ -57,8 +58,6 @@ export default class ObsidianPluginMtg extends Plugin {
 		this.registerMarkdownCodeBlockProcessor(
 			"mtg-deck",
 			async (source: string, el: HTMLElement, ctx) => {
-				let error = null;
-
 				// Sync card counts once if they haven't been already
 				if (!this.cardCounts) {
 					this.cardCounts = await syncCounts(vault, this.settings);
@@ -72,10 +71,9 @@ export default class ObsidianPluginMtg extends Plugin {
 						this.settings
 					);
 				} catch (err) {
-					error = err;
 					console.error(err);
 					el.createDiv({
-						text: String(error),
+						text: String(err),
 						cls: "obsidian-plugin-mtg-error",
 					});
 				}
