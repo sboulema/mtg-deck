@@ -32,8 +32,6 @@ const currencyMapping = {
 	tix: "Tx",
 };
 
-const idToNameMemo: Record<string, string> = {};
-
 export const getCardPrice = (
 	cardName: string,
 	cardDataById: Record<string, CardData>,
@@ -61,7 +59,7 @@ export const parseLines = (
 	cardCounts: CardCounts
 ): Line[] => {
 	// This means global counts are not available because they are missing or no collection files are present
-	let shouldSkipGlobalCounts = !Object.keys(cardCounts).length;
+	const shouldSkipGlobalCounts = !Object.keys(cardCounts).length;
 
 	// count, collection_count, card name, comment
 	return rawLines.map((line) => {
@@ -107,7 +105,7 @@ export const parseLines = (
 		}
 
 		// Handle card lines
-		let lineParts = lineWithoutComments.match(lineMatchRE);
+		const lineParts = lineWithoutComments.match(lineMatchRE);
 
 		// Handle invalid line
 		if (lineParts == null) {
@@ -161,7 +159,7 @@ export const fetchCardDataFromScryfall = async (
 	const batches: string[][] = [];
 	let currentBatch: string[] = [];
 	batches.push(currentBatch);
-	distinctCardNames.forEach((cardName: string, idx: number) => {
+	distinctCardNames.forEach((cardName: string) => {
 		if (currentBatch.length === MAX_SCRYFALL_BATCH_SIZE) {
 			batches.push(currentBatch);
 			// Make new batch
@@ -176,7 +174,7 @@ export const fetchCardDataFromScryfall = async (
 		batches.map((batch) => getMultipleCardData(batch))
 	);
 	const cardDataByCardId: Record<string, CardData> = {};
-	const cards = [];
+	const cards: CardData[] = [];
 
 	cardDataInBatches.forEach((batch) => {
 		batch.data.forEach((card: CardData) => {
@@ -207,10 +205,7 @@ export const renderDecklist = async (
 	const linesBySection: Record<string, Line[]> = {};
 
 	let currentSection = DEFAULT_SECTION_NAME;
-	let sections: string[] = [];
-
-	// A reverse mapping for getting names from an id
-	const idsToNames: Record<string, string> = {};
+	const sections: string[] = [];
 
 	parsedLines.forEach((line, idx) => {
 		if (idx == 0 && line.lineType !== "section") {
@@ -250,7 +245,7 @@ export const renderDecklist = async (
 	const imgElContainer = header.createDiv({ cls: "card-image-container" });
 	const imgEl = imgElContainer.createEl("img", { cls: "card-image" });
 
-	// Footer Section
+	// Footer section
 	const footer = containerEl.createDiv({ cls: "footer" });
 
 	const sectionTotalCounts: Record<string, number> = sections.reduce(
@@ -265,29 +260,24 @@ export const renderDecklist = async (
 
 	sections.forEach((section: string) => {
 		// Put the entire deck in containing div for styling
-		const sectionContainer = document.createElement("div");
-		sectionContainer.classList.add("decklist__section-container");
+		const sectionContainer = containerEl.createDiv({ cls: "decklist__section-container" });
 
 		// Create a heading
-		const sectionHedingEl = document.createElement("h3");
-		sectionHedingEl.classList.add("decklist__section-heading");
-		sectionContainer.appendChild(sectionHedingEl);
+		const sectionHeadingEl = sectionContainer.createEl("h3", { cls: "decklist__section-heading" });
 
 		// Create container for the list items
-		const sectionList = document.createElement("ul");
-		sectionList.classList.add("decklist__section-list");
+		const sectionList = sectionContainer.createEl("ul", { cls: "decklist__section-list" });
 
 		const sectionMissingCardCounts: CardCounts = {};
 
 		// Create line item elements
 		linesBySection[section].forEach((line: Line) => {
-			const lineEl = document.createElement("li");
-			lineEl.classList.add("decklist__section-list-item");
+			const lineEl = sectionList.createEl("li", { cls: "decklist__section-list-item" });
 
 			if (line.lineType === "card") {
 				const cardCountEl = lineEl.createSpan({ cls: "count" });
 
-				const cardNameEl = lineEl.createSpan({ cls: "card-name", });
+				const cardNameEl = lineEl.createSpan({ cls: "card-name" });
 
 				// Add hyperlink when possible
 				if (line.cardName) {
@@ -298,11 +288,9 @@ export const renderDecklist = async (
 						cardInfo &&
 						cardInfo.scryfall_uri
 					) {
-						const cardLinkEl = document.createElement("a");
-						const purchaseUri = cardInfo.scryfall_uri;
-						cardLinkEl.href = purchaseUri;
+						const cardLinkEl = cardNameEl.createEl("a");
+						cardLinkEl.href = cardInfo.scryfall_uri;
 						cardLinkEl.textContent = `${cardInfo.name}`;
-						cardNameEl.appendChild(cardLinkEl);
 					} else {
 						cardNameEl.textContent = `${
 							(cardInfo && cardInfo.name) ||
@@ -312,9 +300,8 @@ export const renderDecklist = async (
 					}
 				}
 
-				let cardErrorsEl = null;
 				if (line.errors && line.errors.length) {
-					cardErrorsEl = lineEl.createSpan({
+					lineEl.createSpan({
 						cls: "error",
 						text: line.errors?.join(",") || "",
 					});
@@ -372,7 +359,7 @@ export const renderDecklist = async (
 						const amountOwned: number =
 							lineGlobalCount * parseFloat(cardPrice);
 
-						const amountOwnedEl = cardPriceEl.createSpan({
+						cardPriceEl.createSpan({
 							cls: "error",
 							text: `${
 								currencyMapping[
@@ -381,7 +368,6 @@ export const renderDecklist = async (
 							}${amountOwned.toFixed(2)}`,
 						});
 
-						// totalPriceEl
 						cardPriceEl.createSpan({
 							text: ` / ${
 								currencyMapping[
@@ -413,10 +399,6 @@ export const renderDecklist = async (
 
 				sectionTotalCounts[section] =
 					sectionTotalCounts[section] + (line.cardCount || 0);
-
-				if (cardErrorsEl) {
-					lineEl.appendChild(cardErrorsEl);
-				}
 
 				if (settings.decklist.showCardPreviews) {
 					// Event handlers for card artwork popover
@@ -452,25 +434,18 @@ export const renderDecklist = async (
 						imgEl.src = "";
 					});
 				}
-
-				sectionList.appendChild(lineEl);
 			} else if (line.lineType === "comment") {
 				// Comments
 				lineEl.createSpan({
 					cls: "comment",
 					text: line.comments?.join(" ") || "",
 				});
-
-				sectionList.appendChild(lineEl);
 			}
 		});
 
-		sectionHedingEl.textContent = `${section}`;
+		sectionHeadingEl.textContent = `${section}`;
 
-		sectionContainer.appendChild(sectionList);
-
-		const horizontalDividorEl = document.createElement("hr");
-		sectionContainer.appendChild(horizontalDividorEl);
+		sectionContainer.createEl("hr");
 
 		const totalsEl = sectionContainer.createDiv({
 			cls: "decklist__section-totals",
@@ -478,8 +453,8 @@ export const renderDecklist = async (
 
 		const sectionMissingCardIds = Object.keys(sectionMissingCardCounts);
 
-		const totalCardsEl = sectionContainer.createSpan({ cls: "decklist__section-totals__count" });
-		const totalCostEl = sectionContainer.createSpan({ cls: "decklist__section-totals__cost" });
+		const totalCardsEl = totalsEl.createSpan({ cls: "decklist__section-totals__count" });
+		const totalCostEl = totalsEl.createSpan({ cls: "decklist__section-totals__cost" });
 
 		// When there are missing cards, show fraction
 		if (sectionMissingCardIds.length) {
@@ -503,8 +478,6 @@ export const renderDecklist = async (
 				text: ` / ${sectionTotalCounts[section]}`,
 			});
 
-			totalCardsEl.classList.add("decklist__section-totals__count");
-
 			const totalMissingCostInSection = Object.keys(
 				sectionMissingCardCounts
 			).reduce((acc, cardId) => {
@@ -519,7 +492,7 @@ export const renderDecklist = async (
 			if (hasCardInfo && !settings.decklist.hidePrices) {
 				const totalValueOwned =
 					sectionTotalCost[section] - totalMissingCostInSection;
-				const totalValueOwnedEl = totalCostEl.createSpan({
+				totalCostEl.createSpan({
 					cls: "error",
 					text: `${
 						currencyMapping[settings.decklist.preferredCurrency]
@@ -535,9 +508,7 @@ export const renderDecklist = async (
 				});
 			}
 
-			// Otherwise show simple values
 		} else {
-			totalCardsEl.classList.add("decklist__section-totals__count");
 			totalCardsEl.textContent = `${sectionTotalCounts[section]}`;
 			if (!settings.decklist.hidePrices) {
 				totalCostEl.textContent = `${
@@ -546,9 +517,7 @@ export const renderDecklist = async (
 			}
 		}
 
-		totalsEl.appendChild(totalCardsEl);
-
-		const totalCardsUnitEl = totalsEl.createSpan({
+		totalsEl.createSpan({
 			cls: "card-name",
 			text: "cards",
 		});
@@ -556,8 +525,6 @@ export const renderDecklist = async (
 		if (hasCardInfo && !settings.decklist.hidePrices) {
 			totalsEl.appendChild(totalCostEl);
 		}
-
-		sectionContainer.appendChild(totalsEl);
 
 		sectionContainers.push(sectionContainer);
 	});
@@ -574,18 +541,13 @@ export const renderDecklist = async (
 
 	// Only show the buylist element when there are missing cards
 	if (buylistCardIds.length && settings.decklist.showBuylist) {
-		// Build Buylist
-		const buylist = document.createElement("div");
-		buylist.classList.add("buylist-container");
+		// Build buylist
+		const buylist = footer.createDiv({ cls: "buylist-container" });
 
-		const buylistHeader = document.createElement("h3");
-		buylistHeader.classList.add("decklist__section-heading");
+		const buylistHeader = buylist.createEl("h3", { cls: "decklist__section-heading" });
 		buylistHeader.textContent = "Buylist: ";
 
-		buylist.appendChild(buylistHeader);
-
 		let totalCostOfBuylist = 0.0;
-
 		let buylistLines = "";
 
 		buylistCardIds.forEach((cardId) => {
@@ -599,7 +561,6 @@ export const renderDecklist = async (
 
 			if (cardInfo) {
 				const cardName = cardInfo.name || "";
-
 				buylistLine += `${cardName}`;
 
 				// Retrieve price
@@ -617,43 +578,31 @@ export const renderDecklist = async (
 			}
 		});
 
-		const buylistPre = document.createElement("pre");
-		buylistPre.classList.add("buylist-container");
+		const buylistPre = buylist.createEl("pre", { cls: "buylist-container" });
 		buylistPre.textContent = buylistLines;
 
-		buylist.appendChild(buylistPre);
+		buylist.createEl("hr");
 
-		const horizontalDividorEl = document.createElement("hr");
-		buylist.appendChild(horizontalDividorEl);
+		const buylistLineEl = buylist.createDiv({ cls: "buylist-line" });
 
-		const buylistLineEl = document.createElement("div");
-		buylistLineEl.classList.add("buylist-line");
-
-		// countEl
 		buylistLineEl.createSpan({
 			cls: "decklist__section-totals__count",
 			text: `${buylistCardCounts} `,
 		});
 
-		// cardNameEl
 		buylistLineEl.createSpan({
 			cls: "card-name",
 			text: "cards",
 		});
 
-		let totalPriceEl = null;
 		if (hasCardInfo && !settings.decklist.hidePrices) {
-			totalPriceEl = buylistLineEl.createSpan({
+			buylistLineEl.createSpan({
 				cls: "decklist__section-totals",
 				text: `${
 					currencyMapping[settings.decklist.preferredCurrency]
 				}${totalCostOfBuylist.toFixed(2)}`,
 			});
 		}
-
-		buylist.appendChild(buylistLineEl);
-
-		footer.appendChild(buylist);
 	}
 
 	containerEl.appendChild(footer);

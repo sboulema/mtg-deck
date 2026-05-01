@@ -47,7 +47,7 @@ export default defineConfig([
                 ...globals.node,
             },
             parser: tsParser,
-            ecmaVersion: 5,
+            ecmaVersion: 2020,
             sourceType: "module",
             parserOptions: {
                 projectService: {
