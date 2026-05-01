@@ -1,9 +1,10 @@
 import { jest } from "@jest/globals";
+import { RequestOptions } from "../src/http";
 
 // Mock http library to avoid using "obsidian" import
-jest.mock<typeof import('../src/http')>('../src/http', () => {
+jest.mock('../src/http', () => {
   return {
-    promiseWrappedRequest: (options: any) => Promise.resolve({} as any)
+    promiseWrappedRequest: (_options: RequestOptions): Promise<Record<string, never>> => Promise.resolve({})
   }
 });
 
