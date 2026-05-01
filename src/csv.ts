@@ -6,11 +6,11 @@
  */
 export const parseCsvCells = (str: string): string[][] => {
 	const arr: string[][] = [];
-	var quote = false; // 'true' means we're inside a quoted field
+	let quote = false; // 'true' means we're inside a quoted field
 
 	// Iterate over each character, keep track of current row and column (of the returned array)
-	for (var row = 0, col = 0, c = 0; c < str.length; c++) {
-		var cc = str[c],
+	for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+		const cc = str[c],
 			nc = str[c + 1]; // Current character, next character
 		arr[row] = arr[row] || []; // Create a new row if necessary
 		arr[row][col] = arr[row][col] || ""; // Create a new column (start with empty string) if necessary
