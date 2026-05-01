@@ -113,7 +113,7 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl("h2", {
-			text: "Settings for Obsidian MtG Plugin.",
+			text: "Settings for MTG Deck",
 		});
 
 		// Collection CSV setting

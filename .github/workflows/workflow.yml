@@ -1,4 +1,4 @@
-name: MtG Deck
+name: MTG Deck
 
 on:
   push:

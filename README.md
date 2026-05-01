@@ -1,4 +1,4 @@
-# Obsidian MTG Deck plugin
+# MTG Deck
 
 This is a plugin to manage your Magic: The Gathering card collections and decks as Obsidian notes.
 
