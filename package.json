@@ -1,6 +1,6 @@
 {
 	"name": "mtg-deck",
-	"version": "1.0.3",
+	"version": "1.0.28",
 	"description": "A plugin for managing Magic: The Gathering decks and card lists as Obsidian notes",
 	"main": "main.js",
 	"scripts": {
