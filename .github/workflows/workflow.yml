@@ -11,7 +11,7 @@ permissions:
 
 env:
   version: '1.0.${{ github.run_number }}'
-  nodeVersion: '18'
+  nodeVersion: '22'
 
 jobs:
   build:
@@ -28,6 +28,7 @@ jobs:
 
       - name: Build plugin
         run: |
+          echo ${{ github.run_number }}
           npm install
           npm run build
 
