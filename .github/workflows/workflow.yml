@@ -28,7 +28,6 @@ jobs:
 
       - name: Build plugin
         run: |
-          echo ${{ github.run_number }}
           npm install
           npm run build
 

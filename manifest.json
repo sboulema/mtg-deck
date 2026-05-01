@@ -1,9 +1,9 @@
 {
 	"id": "mtg-deck",
 	"name": "MTG Deck",
-	"version": "1.0.28",
+	"version": "1.0.29",
 	"minAppVersion": "0.15.0",
-	"description": "A plugin for managing Magic: The Gathering decks and card lists as Obsidian notes",
+	"description": "Display your MTG decks and card lists in your notes.",
 	"author": "Samir Boulema",
 	"authorUrl": "https://github.com/sboulema",
 	"isDesktopOnly": false
