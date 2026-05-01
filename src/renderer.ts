@@ -6,7 +6,6 @@ import {
 	ScryfallResponse,
 } from "./scryfall";
 import { ObsidianPluginMtgSettings } from "./settings";
-import { createDiv, createSpan } from "./dom-utils";
 
 const DEFAULT_SECTION_NAME = "Deck:";
 const COMMENT_DELIMITER = "#";
@@ -199,8 +198,7 @@ export const renderDecklist = async (
 	settings: ObsidianPluginMtgSettings,
 	dataFetcher = fetchCardDataFromScryfall
 ): Promise<Element> => {
-	const containerEl = createDiv(root, {});
-	containerEl.classList.add("decklist");
+	const containerEl = root.createDiv({ cls: "decklist" });
 
 	const lines: string[] = source.split("\n");
 
@@ -238,7 +236,7 @@ export const renderDecklist = async (
 	try {
 		cardDataByCardId = await dataFetcher(distinctCardNames);
 	} catch (err) {
-		console.log("Error fetching card data: ", err);
+		console.error("Error fetching card data: ", err);
 	}
 
 	// Determines whether any card info was found for the cards on the list
@@ -248,22 +246,12 @@ export const renderDecklist = async (
 	const sectionContainers: Element[] = [];
 
 	// Header section
-	const header = createDiv(containerEl, {
-		cls: "header",
-	});
-
-	const imgElContainer = document.createElement("div");
-	imgElContainer.classList.add("card-image-container");
-	const imgEl = document.createElement("img");
-	imgEl.classList.add("card-image");
-	imgElContainer.appendChild(imgEl);
-
-	// Attach image container to header
-	header.appendChild(imgElContainer);
+	const header = containerEl.createDiv({ cls: "header" });
+	const imgElContainer = header.createDiv({ cls: "card-image-container" });
+	const imgEl = imgElContainer.createEl("img", { cls: "card-image" });
 
 	// Footer Section
-	const footer = document.createElement("div");
-	footer.classList.add("footer");
+	const footer = containerEl.createDiv({ cls: "footer" });
 
 	const sectionTotalCounts: Record<string, number> = sections.reduce(
 		(acc, curr) => ({ ...acc, [curr]: 0 }),
@@ -297,13 +285,9 @@ export const renderDecklist = async (
 			lineEl.classList.add("decklist__section-list-item");
 
 			if (line.lineType === "card") {
-				const cardCountEl = createSpan(lineEl, {
-					cls: "count",
-				});
+				const cardCountEl = lineEl.createSpan({ cls: "count" });
 
-				const cardNameEl = createSpan(lineEl, {
-					cls: "card-name",
-				});
+				const cardNameEl = lineEl.createSpan({ cls: "card-name", });
 
 				// Add hyperlink when possible
 				if (line.cardName) {
@@ -330,18 +314,18 @@ export const renderDecklist = async (
 
 				let cardErrorsEl = null;
 				if (line.errors && line.errors.length) {
-					cardErrorsEl = createSpan(lineEl, {
+					cardErrorsEl = lineEl.createSpan({
 						cls: "error",
 						text: line.errors?.join(",") || "",
 					});
 				}
 
-				const cardCommentsEl = createSpan(lineEl, {
+				const cardCommentsEl = lineEl.createSpan({
 					cls: "comment",
 					text: line.comments?.join("#") || "",
 				});
 
-				const cardPriceEl = createSpan(lineEl, {
+				const cardPriceEl = lineEl.createSpan({
 					cls: "card-price",
 				});
 				let cardPrice;
@@ -359,14 +343,14 @@ export const renderDecklist = async (
 
 				// Show missing card counts
 				if (lineGlobalCount !== -1 && lineCardCount > lineGlobalCount) {
-					const counts = createSpan(cardCountEl);
+					const counts = cardCountEl.createSpan({ cls: "count" });
 					// Card error element
-					createSpan(counts, {
+					counts.createSpan({
 						cls: "error",
 						text: `${lineGlobalCount}`,
 					});
 					// Card counts row element
-					createSpan(counts, {
+					counts.createSpan({
 						text: ` / ${lineCardCount}`,
 					});
 					lineEl.classList.add("insufficient-count");
@@ -388,7 +372,7 @@ export const renderDecklist = async (
 						const amountOwned: number =
 							lineGlobalCount * parseFloat(cardPrice);
 
-						const amountOwnedEl = createSpan(cardPriceEl, {
+						const amountOwnedEl = cardPriceEl.createSpan({
 							cls: "error",
 							text: `${
 								currencyMapping[
@@ -398,7 +382,7 @@ export const renderDecklist = async (
 						});
 
 						// totalPriceEl
-						createSpan(cardPriceEl, {
+						cardPriceEl.createSpan({
 							text: ` / ${
 								currencyMapping[
 									settings.decklist.preferredCurrency
@@ -472,7 +456,7 @@ export const renderDecklist = async (
 				sectionList.appendChild(lineEl);
 			} else if (line.lineType === "comment") {
 				// Comments
-				createSpan(lineEl, {
+				lineEl.createSpan({
 					cls: "comment",
 					text: line.comments?.join(" ") || "",
 				});
@@ -488,14 +472,14 @@ export const renderDecklist = async (
 		const horizontalDividorEl = document.createElement("hr");
 		sectionContainer.appendChild(horizontalDividorEl);
 
-		const totalsEl = createDiv(sectionContainer, {
+		const totalsEl = sectionContainer.createDiv({
 			cls: "decklist__section-totals",
 		});
 
 		const sectionMissingCardIds = Object.keys(sectionMissingCardCounts);
 
-		const totalCardsEl = createSpan(sectionContainer);
-		const totalCostEl = createSpan(sectionContainer);
+		const totalCardsEl = sectionContainer.createSpan({ cls: "decklist__section-totals__count" });
+		const totalCostEl = sectionContainer.createSpan({ cls: "decklist__section-totals__cost" });
 
 		// When there are missing cards, show fraction
 		if (sectionMissingCardIds.length) {
@@ -508,13 +492,13 @@ export const renderDecklist = async (
 				sectionTotalCounts[section] - totalMissingCountInSection;
 
 			// Errors
-			createSpan(totalCardsEl, {
+			totalCardsEl.createSpan({
 				cls: "error",
 				text: `${totalCardsOwned}`,
 			});
 
 			// Counts
-			createSpan(totalCardsEl, {
+			totalCardsEl.createSpan({
 				cls: "insufficient-count",
 				text: ` / ${sectionTotalCounts[section]}`,
 			});
@@ -535,7 +519,7 @@ export const renderDecklist = async (
 			if (hasCardInfo && !settings.decklist.hidePrices) {
 				const totalValueOwned =
 					sectionTotalCost[section] - totalMissingCostInSection;
-				const totalValueOwnedEl = createSpan(totalCostEl, {
+				const totalValueOwnedEl = totalCostEl.createSpan({
 					cls: "error",
 					text: `${
 						currencyMapping[settings.decklist.preferredCurrency]
@@ -543,7 +527,7 @@ export const renderDecklist = async (
 				});
 
 				// Total value needed
-				createSpan(totalCostEl, {
+				totalCostEl.createSpan({
 					cls: "insufficient-count",
 					text: ` / ${
 						currencyMapping[settings.decklist.preferredCurrency]
@@ -564,7 +548,7 @@ export const renderDecklist = async (
 
 		totalsEl.appendChild(totalCardsEl);
 
-		const totalCardsUnitEl = createSpan(totalsEl, {
+		const totalCardsUnitEl = totalsEl.createSpan({
 			cls: "card-name",
 			text: "cards",
 		});
@@ -610,11 +594,6 @@ export const renderDecklist = async (
 
 			const countNeeded = missingCardCounts[cardId];
 
-			// const countEl = createSpan(buylistLineEl, {
-			// 	cls: "decklist__section-totals__count",
-			// 	text: `${countNeeded}`,
-			// });
-
 			// Add count
 			buylistLine += `${countNeeded}` + " ";
 
@@ -651,20 +630,20 @@ export const renderDecklist = async (
 		buylistLineEl.classList.add("buylist-line");
 
 		// countEl
-		createSpan(buylistLineEl, {
+		buylistLineEl.createSpan({
 			cls: "decklist__section-totals__count",
 			text: `${buylistCardCounts} `,
 		});
 
 		// cardNameEl
-		createSpan(buylistLineEl, {
+		buylistLineEl.createSpan({
 			cls: "card-name",
 			text: "cards",
 		});
 
 		let totalPriceEl = null;
 		if (hasCardInfo && !settings.decklist.hidePrices) {
-			totalPriceEl = createSpan(buylistLineEl, {
+			totalPriceEl = buylistLineEl.createSpan({
 				cls: "decklist__section-totals",
 				text: `${
 					currencyMapping[settings.decklist.preferredCurrency]

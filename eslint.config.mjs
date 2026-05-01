@@ -17,7 +17,7 @@ const compat = new FlatCompat({
 });
 
 export default defineConfig([
-    globalIgnores(["**/npm node_modules", "**/build"]),
+    globalIgnores(["**/npm node_modules", "**/build", "main.js"]),
 
     // Legacy plugins shimmed via FlatCompat
     ...compat.extends(
@@ -28,6 +28,14 @@ export default defineConfig([
 
     // Native flat config plugin — must be spread directly, not via compat
     ...obsidianmd.configs.recommended,
+
+    // Disable mobile-safety rules for test files — they never run in Obsidian
+    {
+        files: ["jest/**/*", "**/*.test.ts", "**/*.spec.ts"],
+        rules: {
+            "obsidianmd/no-nodejs-modules": "off",
+        },
+    },
 
     // Your project rules
     {
@@ -56,6 +64,12 @@ export default defineConfig([
             "@typescript-eslint/ban-ts-comment": "off",
             "no-prototype-builtins": "off",
             "@typescript-eslint/no-empty-function": "off",
+            "obsidianmd/ui/sentence-case": [
+                "warn",
+                {
+                    brands: ["Scryfall", "MTG"]
+                },
+            ],
         },
     }
 ]);

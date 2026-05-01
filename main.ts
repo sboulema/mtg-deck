@@ -73,12 +73,11 @@ export default class ObsidianPluginMtg extends Plugin {
 					);
 				} catch (err) {
 					error = err;
-					console.log(err);
-					const errorNode = document.createDiv({
+					console.error(err);
+					el.createDiv({
 						text: String(error),
 						cls: "obsidian-plugin-mtg-error",
 					});
-					el.appendChild(errorNode);
 				}
 			}
 		);
@@ -112,9 +111,9 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl("h2", {
-			text: "Settings for MTG Deck",
-		});
+		new Setting(containerEl)
+			.setName("Collection")
+			.setHeading()
 
 		// Collection CSV setting
 		new Setting(containerEl)
@@ -157,7 +156,11 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Preferred Currency")
+			.setName("Deck list")
+			.setHeading()
+
+		new Setting(containerEl)
+			.setName("Preferred currency")
 			.setDesc(
 				"The currency you prefer when viewing card prices in your decklist"
 			)
@@ -173,7 +176,7 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Show Card Name Hyperlinks")
+			.setName("Show card name hyperlinks")
 			.setDesc(
 				"Enables card names that link to Scryfall or purchasing sites when possible"
 			)
@@ -190,7 +193,7 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Show Card Images")
+			.setName("Show card images")
 			.setDesc(
 				"Enables card previews when hovering with the mouse on desktop"
 			)
@@ -204,7 +207,7 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Show Buylist")
+			.setName("Show buylist")
 			.setDesc(
 				"Enables a buylist below your decklist with buylinks for each card"
 			)
@@ -218,7 +221,7 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Hide Prices")
+			.setName("Hide prices")
 			.setDesc("Toggles card prices in decklists")
 			.addToggle((toggle) =>
 				toggle
