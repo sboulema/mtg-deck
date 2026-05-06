@@ -11,39 +11,6 @@ If your plugin does not need CSS, delete this file.
 	padding: 8px;
 }
 
-table.decklist__section-list {
-	border-collapse: collapse;
-	margin: 0;
-	padding: 0;
-	width: 100%;
-}
-
-table.decklist__section-list td {
-	padding: 0;
-	vertical-align: top;
-}
-
-.decklist__section-totals {
-	display: flex;
-}
-
-.decklist__section-totals span {
-	flex: 1;
-}
-
-span.decklist__section-totals__count {
-	flex: 1;
-}
-
-tr.decklist__section-list-item {
-	font-weight: 400;
-}
-
-tr.decklist__section-list-item span {
-	display: block;
-	width: 100%;
-}
-
 .count {
 	flex: 1;
 }
@@ -63,19 +30,9 @@ span.comment {
 	flex: 2;
 }
 
-.card-price {
-}
-
 .error {
 	color: #a33;
 	font-style: italic;
-}
-
-.decklist__section-heading {
-	font-weight: 800;
-}
-
-.footer {
 }
 
 .card-image {
@@ -93,10 +50,6 @@ span.comment {
 .buylist-line span {
 	flex: 1;
 }
-
-/* decklist__section-totals {
-    font-weight: 800;
-} */
 
 .decklist__section-totals .card-name {
 	flex: 4;

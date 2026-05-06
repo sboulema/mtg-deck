@@ -266,14 +266,21 @@ export const renderDecklist = async (
 		const sectionHeadingEl = sectionContainer.createEl("h3", { cls: "decklist__section-heading" });
 
 		// Create container for the table rows
-		const sectionList = sectionContainer.createEl("table", { cls: "decklist__section-list" });
+		const sectionList = sectionContainer.createEl("table");
+		const sectionListHead = sectionList.createEl("thead");
+		const sectionListHeadRow = sectionListHead.createEl("tr");
+		sectionListHeadRow.createEl("th", { text: "Count" });
+		sectionListHeadRow.createEl("th", { text: "Name" });
+		if (!settings.decklist.hidePrices) {
+			sectionListHeadRow.createEl("th", { text: "Price" });
+		}
 		const sectionListBody = sectionList.createEl("tbody");
 
 		const sectionMissingCardCounts: CardCounts = {};
 
 		// Create line item elements
 		linesBySection[section].forEach((line: Line) => {
-			const lineEl = sectionListBody.createEl("tr", { cls: "decklist__section-list-item" });
+			const lineEl = sectionListBody.createEl("tr");
 
 			if (line.lineType === "card") {
 				const cardCountCell = lineEl.createEl("td");
@@ -281,12 +288,26 @@ export const renderDecklist = async (
 
 				const cardNameCell = lineEl.createEl("td");
 				const cardNameEl = cardNameCell.createSpan({ cls: "card-name" });
+				const cardCommentsEl = cardNameCell.createSpan({
+					cls: "comment",
+					text: line.comments?.join("#") || "",
+				});
 
-				const cardCommentsCell = lineEl.createEl("td");
-				const cardCommentsEl = cardCommentsCell.createSpan({ cls: "comment" });
+				let cardPrice;
+				let cardPriceEl;
 
-				const cardPriceCell = lineEl.createEl("td");
-				const cardPriceEl = cardPriceCell.createSpan({ cls: "card-price" });
+				if (!settings.decklist.hidePrices) {
+					const cardPriceCell = lineEl.createEl("td");
+					cardPriceEl = cardPriceCell.createSpan({ cls: "card-price" });
+
+					if (line.cardName) {
+						cardPrice = getCardPrice(
+							line.cardName,
+							cardDataByCardId,
+							settings
+						);
+					}
+				}
 
 				// Add hyperlink when possible
 				if (line.cardName) {
@@ -314,17 +335,6 @@ export const renderDecklist = async (
 						cls: "error",
 						text: line.errors?.join(",") || "",
 					});
-				}
-
-				cardCommentsEl.textContent = line.comments?.join("#") || "";
-
-				let cardPrice;
-				if (line.cardName) {
-					cardPrice = getCardPrice(
-						line.cardName,
-						cardDataByCardId,
-						settings
-					);
 				}
 
 				const lineCardCount = line.cardCount || 0;
@@ -355,14 +365,14 @@ export const renderDecklist = async (
 						(lineCardCount - lineGlobalCount);
 
 					if (cardPrice) {
-						cardPriceEl.classList.add("insufficient-count");
+						cardPriceEl!.classList.add("insufficient-count");
 
 						const totalPrice: number =
 							lineCardCount * parseFloat(cardPrice);
 						const amountOwned: number =
 							lineGlobalCount * parseFloat(cardPrice);
 
-						cardPriceEl.createSpan({
+						cardPriceEl!.createSpan({
 							cls: "error",
 							text: `${
 								currencyMapping[
@@ -371,7 +381,7 @@ export const renderDecklist = async (
 							}${amountOwned.toFixed(2)}`,
 						});
 
-						cardPriceEl.createSpan({
+						cardPriceEl!.createSpan({
 							text: ` / ${
 								currencyMapping[
 									settings.decklist.preferredCurrency
@@ -392,7 +402,8 @@ export const renderDecklist = async (
 						const displayPrice = `${
 							currencyMapping[settings.decklist.preferredCurrency]
 						}${totalPrice.toFixed(2)}`;
-						cardPriceEl.textContent = displayPrice;
+
+						cardPriceEl!.textContent = displayPrice;
 
 						// Add cost to total
 						sectionTotalCost[section] =
@@ -439,8 +450,7 @@ export const renderDecklist = async (
 				}
 			} else if (line.lineType === "comment") {
 				// Comments
-				const commentCell = lineEl.createEl("td", { attr: { colspan: "4" } });
-				commentCell.createSpan({
+				lineEl.createSpan({
 					cls: "comment",
 					text: line.comments?.join(" ") || "",
 				});
