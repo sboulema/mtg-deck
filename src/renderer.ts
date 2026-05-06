@@ -269,10 +269,10 @@ export const renderDecklist = async (
 		const sectionList = sectionContainer.createEl("table");
 		const sectionListHead = sectionList.createEl("thead");
 		const sectionListHeadRow = sectionListHead.createEl("tr");
-		sectionListHeadRow.createEl("th", { text: "Count" });
+		sectionListHeadRow.createEl("th", { text: "Count", cls: "fit" });
 		sectionListHeadRow.createEl("th", { text: "Name" });
 		if (!settings.decklist.hidePrices) {
-			sectionListHeadRow.createEl("th", { text: "Price" });
+			sectionListHeadRow.createEl("th", { text: "Price", cls: "fit" });
 		}
 		const sectionListBody = sectionList.createEl("tbody");
 

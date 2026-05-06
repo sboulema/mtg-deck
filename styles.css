@@ -11,6 +11,19 @@ If your plugin does not need CSS, delete this file.
 	padding: 8px;
 }
 
+.decklist__section-container table {
+	width: 100%;
+}
+
+.decklist__section-container .fit {
+	width: 0;
+	min-width: fit-content;
+}
+
+.decklist__section-totals .card-name {
+	flex: 4;
+}
+
 .count {
 	flex: 1;
 }
@@ -49,10 +62,6 @@ span.comment {
 
 .buylist-line span {
 	flex: 1;
-}
-
-.decklist__section-totals .card-name {
-	flex: 4;
 }
 
 .buylist-line decklist__section-totals__count {
