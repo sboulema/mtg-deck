@@ -457,18 +457,22 @@ export const renderDecklist = async (
 			}
 		});
 
+		const sectionListFoot = sectionList.createEl("tfoot", { cls: "decklist__section-totals" });
+		const sectionListFootRow = sectionListFoot.createEl("tr");
+		const totalCardsEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__count fit" });
+		sectionListFootRow.createEl("td", { text: "Cards" });
+
+		let totalCostEl;
+		if (hasCardInfo && !settings.decklist.hidePrices) {
+			totalCostEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__cost fit" });
+		}
+
 		sectionHeadingEl.textContent = `${section}`;
 
-		sectionContainer.createEl("hr");
-
-		const totalsEl = sectionContainer.createDiv({
-			cls: "decklist__section-totals",
-		});
+		// TODO: this can be deleted?
+		// sectionContainer.createEl("hr");
 
 		const sectionMissingCardIds = Object.keys(sectionMissingCardCounts);
-
-		const totalCardsEl = totalsEl.createSpan({ cls: "decklist__section-totals__count" });
-		const totalCostEl = totalsEl.createSpan({ cls: "decklist__section-totals__cost" });
 
 		// When there are missing cards, show fraction
 		if (sectionMissingCardIds.length) {
@@ -506,7 +510,7 @@ export const renderDecklist = async (
 			if (hasCardInfo && !settings.decklist.hidePrices) {
 				const totalValueOwned =
 					sectionTotalCost[section] - totalMissingCostInSection;
-				totalCostEl.createSpan({
+				totalCostEl!.createSpan({
 					cls: "error",
 					text: `${
 						currencyMapping[settings.decklist.preferredCurrency]
@@ -514,7 +518,7 @@ export const renderDecklist = async (
 				});
 
 				// Total value needed
-				totalCostEl.createSpan({
+				totalCostEl!.createSpan({
 					cls: "insufficient-count",
 					text: ` / ${
 						currencyMapping[settings.decklist.preferredCurrency]
@@ -525,19 +529,10 @@ export const renderDecklist = async (
 		} else {
 			totalCardsEl.textContent = `${sectionTotalCounts[section]}`;
 			if (!settings.decklist.hidePrices) {
-				totalCostEl.textContent = `${
+				totalCostEl!.textContent = `${
 					currencyMapping[settings.decklist.preferredCurrency]
 				}${sectionTotalCost[section].toFixed(2)}`;
 			}
-		}
-
-		totalsEl.createSpan({
-			cls: "card-name",
-			text: "cards",
-		});
-
-		if (hasCardInfo && !settings.decklist.hidePrices) {
-			totalsEl.appendChild(totalCostEl);
 		}
 
 		sectionContainers.push(sectionContainer);
