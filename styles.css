@@ -11,10 +11,16 @@ If your plugin does not need CSS, delete this file.
 	padding: 8px;
 }
 
-ul.decklist__section-list {
-	list-style: none;
+table.decklist__section-list {
+	border-collapse: collapse;
 	margin: 0;
 	padding: 0;
+	width: 100%;
+}
+
+table.decklist__section-list td {
+	padding: 0;
+	vertical-align: top;
 }
 
 .decklist__section-totals {
@@ -29,13 +35,13 @@ span.decklist__section-totals__count {
 	flex: 1;
 }
 
-.decklist__section-list-item {
+tr.decklist__section-list-item {
 	font-weight: 400;
-	display: flex;
 }
 
-.decklist__section-list-item span {
-	flex: 1;
+tr.decklist__section-list-item span {
+	display: block;
+	width: 100%;
 }
 
 .count {

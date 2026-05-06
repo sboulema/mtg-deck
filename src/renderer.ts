@@ -265,19 +265,28 @@ export const renderDecklist = async (
 		// Create a heading
 		const sectionHeadingEl = sectionContainer.createEl("h3", { cls: "decklist__section-heading" });
 
-		// Create container for the list items
-		const sectionList = sectionContainer.createEl("ul", { cls: "decklist__section-list" });
+		// Create container for the table rows
+		const sectionList = sectionContainer.createEl("table", { cls: "decklist__section-list" });
+		const sectionListBody = sectionList.createEl("tbody");
 
 		const sectionMissingCardCounts: CardCounts = {};
 
 		// Create line item elements
 		linesBySection[section].forEach((line: Line) => {
-			const lineEl = sectionList.createEl("li", { cls: "decklist__section-list-item" });
+			const lineEl = sectionListBody.createEl("tr", { cls: "decklist__section-list-item" });
 
 			if (line.lineType === "card") {
-				const cardCountEl = lineEl.createSpan({ cls: "count" });
+				const cardCountCell = lineEl.createEl("td");
+				const cardCountEl = cardCountCell.createSpan({ cls: "count" });
 
-				const cardNameEl = lineEl.createSpan({ cls: "card-name" });
+				const cardNameCell = lineEl.createEl("td");
+				const cardNameEl = cardNameCell.createSpan({ cls: "card-name" });
+
+				const cardCommentsCell = lineEl.createEl("td");
+				const cardCommentsEl = cardCommentsCell.createSpan({ cls: "comment" });
+
+				const cardPriceCell = lineEl.createEl("td");
+				const cardPriceEl = cardPriceCell.createSpan({ cls: "card-price" });
 
 				// Add hyperlink when possible
 				if (line.cardName) {
@@ -301,20 +310,14 @@ export const renderDecklist = async (
 				}
 
 				if (line.errors && line.errors.length) {
-					lineEl.createSpan({
+					cardNameEl.createSpan({
 						cls: "error",
 						text: line.errors?.join(",") || "",
 					});
 				}
 
-				const cardCommentsEl = lineEl.createSpan({
-					cls: "comment",
-					text: line.comments?.join("#") || "",
-				});
+				cardCommentsEl.textContent = line.comments?.join("#") || "";
 
-				const cardPriceEl = lineEl.createSpan({
-					cls: "card-price",
-				});
 				let cardPrice;
 				if (line.cardName) {
 					cardPrice = getCardPrice(
@@ -436,7 +439,8 @@ export const renderDecklist = async (
 				}
 			} else if (line.lineType === "comment") {
 				// Comments
-				lineEl.createSpan({
+				const commentCell = lineEl.createEl("td", { attr: { colspan: "4" } });
+				commentCell.createSpan({
 					cls: "comment",
 					text: line.comments?.join(" ") || "",
 				});
