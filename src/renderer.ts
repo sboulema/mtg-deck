@@ -469,9 +469,6 @@ export const renderDecklist = async (
 
 		sectionHeadingEl.textContent = `${section}`;
 
-		// TODO: this can be deleted?
-		// sectionContainer.createEl("hr");
-
 		const sectionMissingCardIds = Object.keys(sectionMissingCardCounts);
 
 		// When there are missing cards, show fraction
