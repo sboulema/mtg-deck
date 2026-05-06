@@ -265,19 +265,49 @@ export const renderDecklist = async (
 		// Create a heading
 		const sectionHeadingEl = sectionContainer.createEl("h3", { cls: "decklist__section-heading" });
 
-		// Create container for the list items
-		const sectionList = sectionContainer.createEl("ul", { cls: "decklist__section-list" });
+		// Create container for the table rows
+		const sectionList = sectionContainer.createEl("table");
+		const sectionListHead = sectionList.createEl("thead");
+		const sectionListHeadRow = sectionListHead.createEl("tr");
+		sectionListHeadRow.createEl("th", { text: "Count", cls: "fit" });
+		sectionListHeadRow.createEl("th", { text: "Name" });
+		if (!settings.decklist.hidePrices) {
+			sectionListHeadRow.createEl("th", { text: "Price", cls: "fit" });
+		}
+		const sectionListBody = sectionList.createEl("tbody");
 
 		const sectionMissingCardCounts: CardCounts = {};
 
 		// Create line item elements
 		linesBySection[section].forEach((line: Line) => {
-			const lineEl = sectionList.createEl("li", { cls: "decklist__section-list-item" });
+			const lineEl = sectionListBody.createEl("tr");
 
 			if (line.lineType === "card") {
-				const cardCountEl = lineEl.createSpan({ cls: "count" });
+				const cardCountCell = lineEl.createEl("td");
+				const cardCountEl = cardCountCell.createSpan({ cls: "count" });
 
-				const cardNameEl = lineEl.createSpan({ cls: "card-name" });
+				const cardNameCell = lineEl.createEl("td");
+				const cardNameEl = cardNameCell.createSpan({ cls: "card-name" });
+				const cardCommentsEl = cardNameCell.createSpan({
+					cls: "comment",
+					text: line.comments?.join("#") || "",
+				});
+
+				let cardPrice;
+				let cardPriceEl;
+
+				if (!settings.decklist.hidePrices) {
+					const cardPriceCell = lineEl.createEl("td");
+					cardPriceEl = cardPriceCell.createSpan({ cls: "card-price" });
+
+					if (line.cardName) {
+						cardPrice = getCardPrice(
+							line.cardName,
+							cardDataByCardId,
+							settings
+						);
+					}
+				}
 
 				// Add hyperlink when possible
 				if (line.cardName) {
@@ -301,27 +331,10 @@ export const renderDecklist = async (
 				}
 
 				if (line.errors && line.errors.length) {
-					lineEl.createSpan({
+					cardNameEl.createSpan({
 						cls: "error",
 						text: line.errors?.join(",") || "",
 					});
-				}
-
-				const cardCommentsEl = lineEl.createSpan({
-					cls: "comment",
-					text: line.comments?.join("#") || "",
-				});
-
-				const cardPriceEl = lineEl.createSpan({
-					cls: "card-price",
-				});
-				let cardPrice;
-				if (line.cardName) {
-					cardPrice = getCardPrice(
-						line.cardName,
-						cardDataByCardId,
-						settings
-					);
 				}
 
 				const lineCardCount = line.cardCount || 0;
@@ -352,14 +365,14 @@ export const renderDecklist = async (
 						(lineCardCount - lineGlobalCount);
 
 					if (cardPrice) {
-						cardPriceEl.classList.add("insufficient-count");
+						cardPriceEl!.classList.add("insufficient-count");
 
 						const totalPrice: number =
 							lineCardCount * parseFloat(cardPrice);
 						const amountOwned: number =
 							lineGlobalCount * parseFloat(cardPrice);
 
-						cardPriceEl.createSpan({
+						cardPriceEl!.createSpan({
 							cls: "error",
 							text: `${
 								currencyMapping[
@@ -368,7 +381,7 @@ export const renderDecklist = async (
 							}${amountOwned.toFixed(2)}`,
 						});
 
-						cardPriceEl.createSpan({
+						cardPriceEl!.createSpan({
 							text: ` / ${
 								currencyMapping[
 									settings.decklist.preferredCurrency
@@ -389,7 +402,8 @@ export const renderDecklist = async (
 						const displayPrice = `${
 							currencyMapping[settings.decklist.preferredCurrency]
 						}${totalPrice.toFixed(2)}`;
-						cardPriceEl.textContent = displayPrice;
+
+						cardPriceEl!.textContent = displayPrice;
 
 						// Add cost to total
 						sectionTotalCost[section] =
@@ -443,18 +457,19 @@ export const renderDecklist = async (
 			}
 		});
 
+		const sectionListFoot = sectionList.createEl("tfoot", { cls: "decklist__section-totals" });
+		const sectionListFootRow = sectionListFoot.createEl("tr");
+		const totalCardsEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__count fit" });
+		sectionListFootRow.createEl("td", { text: "Cards" });
+
+		let totalCostEl;
+		if (hasCardInfo && !settings.decklist.hidePrices) {
+			totalCostEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__cost fit" });
+		}
+
 		sectionHeadingEl.textContent = `${section}`;
 
-		sectionContainer.createEl("hr");
-
-		const totalsEl = sectionContainer.createDiv({
-			cls: "decklist__section-totals",
-		});
-
 		const sectionMissingCardIds = Object.keys(sectionMissingCardCounts);
-
-		const totalCardsEl = totalsEl.createSpan({ cls: "decklist__section-totals__count" });
-		const totalCostEl = totalsEl.createSpan({ cls: "decklist__section-totals__cost" });
 
 		// When there are missing cards, show fraction
 		if (sectionMissingCardIds.length) {
@@ -492,7 +507,7 @@ export const renderDecklist = async (
 			if (hasCardInfo && !settings.decklist.hidePrices) {
 				const totalValueOwned =
 					sectionTotalCost[section] - totalMissingCostInSection;
-				totalCostEl.createSpan({
+				totalCostEl!.createSpan({
 					cls: "error",
 					text: `${
 						currencyMapping[settings.decklist.preferredCurrency]
@@ -500,7 +515,7 @@ export const renderDecklist = async (
 				});
 
 				// Total value needed
-				totalCostEl.createSpan({
+				totalCostEl!.createSpan({
 					cls: "insufficient-count",
 					text: ` / ${
 						currencyMapping[settings.decklist.preferredCurrency]
@@ -511,19 +526,10 @@ export const renderDecklist = async (
 		} else {
 			totalCardsEl.textContent = `${sectionTotalCounts[section]}`;
 			if (!settings.decklist.hidePrices) {
-				totalCostEl.textContent = `${
+				totalCostEl!.textContent = `${
 					currencyMapping[settings.decklist.preferredCurrency]
 				}${sectionTotalCost[section].toFixed(2)}`;
 			}
-		}
-
-		totalsEl.createSpan({
-			cls: "card-name",
-			text: "cards",
-		});
-
-		if (hasCardInfo && !settings.decklist.hidePrices) {
-			totalsEl.appendChild(totalCostEl);
 		}
 
 		sectionContainers.push(sectionContainer);
