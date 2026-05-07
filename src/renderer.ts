@@ -1,5 +1,6 @@
 import { CardCounts, nameToId, UNKNOWN_CARD } from "./collection";
 import {
+	CardIdentifier,
 	CardData,
 	getMultipleCardData,
 	MAX_SCRYFALL_BATCH_SIZE,
@@ -15,14 +16,14 @@ interface Line {
 	cardCount?: number;
 	globalCount?: number | null;
 	cardName?: string;
+	cardSet?: string;
+	cardNumber?: string;
 	comments?: string[];
 	errors?: string[];
 	text?: string;
 }
 
-const lineMatchRE = /(\d+)\s(.*)/;
-const setCodesRE = /(\([A-Za-z0-9]{3}\)\s\d+)/;
-const lineWithSetCodes = /(\d+)\s+([\w| ,']*)\s+(\([A-Za-z0-9]{3}\)\s\d+)/;
+const lineMatchRE = /^(\d+)\s+(.*?)(\s+\(([A-Za-z0-9]{3})\)\s+0*(\d+))?$/;
 const blankLineRE = /^\s+$/;
 const headingMatchRE = new RegExp("^[^[0-9|" + COMMENT_DELIMITER + "]");
 
@@ -88,12 +89,6 @@ export const parseLines = (
 
 		let lineWithoutComments: string = line;
 		const comments: string[] = [];
-		// Handle setcodes, etc
-		if (lineWithoutComments.match(lineWithSetCodes)) {
-			lineWithoutComments = lineWithoutComments
-				.replace(setCodesRE, "")
-				.trim();
-		}
 
 		// Handle comments
 		if (line.includes(COMMENT_DELIMITER)) {
@@ -117,6 +112,8 @@ export const parseLines = (
 			const cardCount: number = parseInt(lineParts[1] || "0");
 			const cardName: string = lineParts[2];
 			const cardId: string = nameToId(cardName);
+			const cardSet: string = lineParts[4];
+			const cardNumber: string = lineParts[5];
 			const errors: string[] = [];
 
 			let globalCount = null;
@@ -134,6 +131,8 @@ export const parseLines = (
 				cardCount,
 				globalCount,
 				cardName,
+				cardSet,
+				cardNumber,
 				comments,
 				errors,
 			};
@@ -141,31 +140,49 @@ export const parseLines = (
 	});
 };
 
-export const buildDistinctCardNamesList = (lines: Line[]): string[] => {
+export const buildDistinctCardList = (lines: Line[]): CardIdentifier[] => {
 	return Array.from(
 		new Set(
-			lines
-				.map((line) => line.cardName || "")
-				// Remove missing values
-				.filter((line) => line !== "")
+			lines.flatMap((line): CardIdentifier[] => {
+				if (line.lineType !== "card") {
+					return [];
+				} else if (line.cardSet === undefined) {
+					return [
+						{
+							name: nameToId(line.cardName),
+						},
+					];
+				} else if (line.cardNumber !== undefined) {
+					return [
+						{
+							set: line.cardSet,
+							collector_number: line.cardNumber,
+						},
+					];
+				} else {
+					// cardSet is defined but cardNumber is
+					// undefined.  Should never happen.
+					return [];
+				}
+			})
 		)
 	);
 };
 
 export const fetchCardDataFromScryfall = async (
-	distinctCardNames: string[]
+	distinctCards: CardIdentifier[]
 ): Promise<Record<string, CardData>> => {
 	// Fetch in batches of 75, since that's the limit of Scryfall batch sizes
-	const batches: string[][] = [];
-	let currentBatch: string[] = [];
+	const batches: CardIdentifier[][] = [];
+	let currentBatch: CardIdentifier[] = [];
 	batches.push(currentBatch);
-	distinctCardNames.forEach((cardName: string) => {
+	distinctCards.forEach((identifier: CardIdentifier, idx: number) => {
 		if (currentBatch.length === MAX_SCRYFALL_BATCH_SIZE) {
 			batches.push(currentBatch);
 			// Make new batch
 			currentBatch = [];
 		}
-		currentBatch.push(nameToId(cardName));
+		currentBatch.push(identifier);
 	});
 	// Add remaining cards
 	batches.push(currentBatch);
@@ -223,13 +240,13 @@ export const renderDecklist = async (
 		}
 	});
 
-	// Create list of distinct card names
-	const distinctCardNames: string[] = buildDistinctCardNamesList(parsedLines);
+	// Create list of distinct cards
+	const distinctCards: CardIdentifier[] = buildDistinctCardList(parsedLines);
 	let cardDataByCardId: Record<string, CardData> = {};
 
 	// Try to fetch data from Scryfall
 	try {
-		cardDataByCardId = await dataFetcher(distinctCardNames);
+		cardDataByCardId = await dataFetcher(distinctCards);
 	} catch (err) {
 		console.error("Error fetching card data: ", err);
 	}

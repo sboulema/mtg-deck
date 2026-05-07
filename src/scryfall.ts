@@ -1,5 +1,14 @@
 import { promiseWrappedRequest } from "./http";
 
+export type CardIdentifier =
+	| {
+			name: string;
+	  }
+	| {
+			set: string;
+			collector_number: string;
+	  };
+
 export interface RequestOptions {
     url: string;
     method?: string;
@@ -148,10 +157,10 @@ export const getCardData = async (
 };
 
 export const getMultipleCardData = async (
-    cardNames: string[],
+    cardIdentifiers: CardIdentifier[],
     request = promiseWrappedRequest
 ): Promise<ScryfallResponse> => {
-    if (cardNames.length === 0) {
+    if (cardIdentifiers.length === 0) {
         return {
             data: [],
             has_more: false,
@@ -159,10 +168,6 @@ export const getMultipleCardData = async (
             total_cards: 0,
         };
     }
-
-    const cardIdentifiers = cardNames.map((cardName) => ({
-        name: cardName,
-    }));
 
     const postData = JSON.stringify({
         identifiers: cardIdentifiers,
