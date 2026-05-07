@@ -33,6 +33,7 @@ describe("Renderer", () => {
             showCardPreviews: true,
             showBuylist: true,
             hidePrices: false,
+            showManaCosts: true,
         },
     };
 

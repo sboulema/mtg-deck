@@ -20,5 +20,7 @@ export interface ObsidianPluginMtgSettings {
 		showBuylist: boolean;
 		// Show prices
 		hidePrices: boolean;
+		// Show mana costs
+		showManaCosts: boolean;
 	};
 }

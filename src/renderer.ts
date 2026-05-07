@@ -42,6 +42,7 @@ export const getCardPrice = (
 	const cardData = cardDataById[cardId];
 	const preferredCurrency = settings.decklist.preferredCurrency;
 	const hidePrices = settings.decklist.hidePrices;
+
 	if (!cardData || hidePrices) {
 		return null;
 	} else {
@@ -286,11 +287,18 @@ export const renderDecklist = async (
 		const sectionList = sectionContainer.createEl("table");
 		const sectionListHead = sectionList.createEl("thead");
 		const sectionListHeadRow = sectionListHead.createEl("tr");
-		sectionListHeadRow.createEl("th", { text: "Count", cls: "fit" });
-		sectionListHeadRow.createEl("th", { text: "Name" });
-		if (!settings.decklist.hidePrices) {
-			sectionListHeadRow.createEl("th", { text: "Price", cls: "fit" });
+
+		sectionListHeadRow.createEl("th", { text: "Count" });
+		sectionListHeadRow.createEl("th", { text: "Name", cls: "max" });
+
+		if (settings.decklist.showManaCosts) {
+			sectionListHeadRow.createEl("th", { text: "Cost" });
 		}
+
+		if (!settings.decklist.hidePrices) {
+			sectionListHeadRow.createEl("th", { text: "Price" });
+		}
+
 		const sectionListBody = sectionList.createEl("tbody");
 
 		const sectionMissingCardCounts: CardCounts = {};
@@ -309,6 +317,32 @@ export const renderDecklist = async (
 					cls: "comment",
 					text: line.comments?.join("#") || "",
 				});
+
+				if (settings.decklist.showManaCosts) {
+					const cardCostCell = lineEl.createEl("td");
+					const cardCostEl = cardCostCell.createSpan({ cls: "card-cost" });
+
+					if (line.cardName) {
+						const cardId = nameToId(line.cardName);
+						const cardInfo = cardDataByCardId[cardId];
+
+						if (cardInfo?.mana_cost) {
+							cardInfo.mana_cost
+								.replace(/\//g, "")
+								.split("{")
+								.slice(1)
+								.forEach(part => {
+									cardCostEl.createEl("img", {
+										attr: {
+											src: `https://svgs.scryfall.io/card-symbols/${part.slice(0, -1)}.svg`,
+											width: 18,
+											height: 18,
+										}
+									});
+								});
+						}
+					}
+				}
 
 				let cardPrice;
 				let cardPriceEl;
@@ -478,6 +512,7 @@ export const renderDecklist = async (
 		const sectionListFootRow = sectionListFoot.createEl("tr");
 		const totalCardsEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__count fit" });
 		sectionListFootRow.createEl("td", { text: "Cards" });
+		sectionListFootRow.createEl("td");
 
 		let totalCostEl;
 		if (hasCardInfo && !settings.decklist.hidePrices) {

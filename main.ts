@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 		showCardPreviews: true,
 		showBuylist: true,
 		hidePrices: false,
+		showManaCosts: true,
 	},
 };
 
@@ -226,6 +227,18 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.decklist.hidePrices)
 					.onChange(async (value: boolean) => {
 						this.plugin.settings.decklist.hidePrices = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Show card mana costs")
+			.setDesc("Enables mana costs to be displayed for each card")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.decklist.showManaCosts)
+					.onChange(async (value: boolean) => {
+						this.plugin.settings.decklist.showManaCosts = value;
 						await this.plugin.saveSettings();
 					})
 			);

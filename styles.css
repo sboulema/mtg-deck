@@ -1,35 +1,57 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+/* Deck List */
 
 .decklist {
 	padding: 8px;
 }
 
 .decklist__section-container table {
-	width: 100%;
+    width: 100%;
+	border: none;
 }
 
-.decklist__section-container .fit {
-	width: 0;
-	min-width: fit-content;
+.decklist__section-container:where(th, td):not(.max) {
+  width: 0;
+  white-space: nowrap !important;
+}
+
+.decklist th,
+.decklist td {
+    border: none;
 }
 
 .decklist__section-totals .card-name {
 	flex: 4;
 }
 
-.count {
-	flex: 1;
+/* Card */
+
+.card-cost {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.card-image {
+	height: 400px;
 }
 
 span.card-name {
 	flex: 2;
+}
+
+span.comment {
+	color: #999;
+	font-style: italic;
+}
+
+.card-image-container {
+	text-align: right;
+	position: absolute;
+	z-index: 1;
+}
+
+.count {
+	flex: 1;
 }
 
 .insufficient-count {
@@ -37,20 +59,12 @@ span.card-name {
 	font-style: italic;
 }
 
-span.comment {
-	color: #999;
-	font-style: italic;
-	flex: 2;
-}
-
 .error {
 	color: #a33;
 	font-style: italic;
 }
 
-.card-image {
-	height: 400px;
-}
+/* Buylist */
 
 .buylist-container {
 	z-index: 0;
@@ -64,7 +78,7 @@ span.comment {
 	flex: 1;
 }
 
-.buylist-line decklist__section-totals__count {
+.buylist-line .decklist__section-totals__count {
 	flex: 1;
 }
 
@@ -74,12 +88,6 @@ span.comment {
 
 .buylist-line .decklist__section-totals {
 	flex: 1;
-}
-
-.card-image-container {
-	text-align: right;
-	position: absolute;
-	z-index: 1;
 }
 
 .buy-button {

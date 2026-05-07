@@ -66,6 +66,7 @@ export interface CardData {
     highres_image?: boolean;
     image_status?: string;
     cmc?: number;
+    mana_cost?: string;
     type_line?: string;
     color_identity?: string[];
     keywords?: string[];
