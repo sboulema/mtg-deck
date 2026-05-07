@@ -33,6 +33,33 @@ const currencyMapping = {
 	tix: "Tx",
 };
 
+const cardTypeOrder = [
+	"Planeswalker",
+	"Creature",
+	"Sorcery",
+	"Instant",
+	"Artifact",
+	"Enchantment",
+	"Land",
+];
+
+const getTypeOrder = (line: Line, cardDataByCardId: Record<string, CardData>): number => {
+	if (line.lineType !== "card" || !line.cardName) {
+		return 999;
+	}
+
+	const cardId = nameToId(line.cardName);
+	const cardInfo = cardDataByCardId[cardId];
+
+	if (!cardInfo?.type_line) {
+		return 999;
+	}
+
+	const index = cardTypeOrder.findIndex(type => cardInfo.type_line!.includes(type));
+
+	return index === -1 ? 999 : index;
+};
+
 export const getCardPrice = (
 	cardName: string,
 	cardDataById: Record<string, CardData>,
@@ -303,11 +330,31 @@ export const renderDecklist = async (
 
 		const sectionMissingCardCounts: CardCounts = {};
 
+		// Sort lines by card type, preserving relative order of non-card lines
+		const sortedLines = [...linesBySection[section]].sort((a, b) => {
+			const typeOrder = getTypeOrder(a, cardDataByCardId) - getTypeOrder(b, cardDataByCardId);
+
+			if (typeOrder !== 0) {
+				return typeOrder;
+			}
+
+			return (a.cardName ?? "").localeCompare(b.cardName ?? "");
+		});
+
+		let previousTypeOrder = -1;
+
 		// Create line item elements
-		linesBySection[section].forEach((line: Line) => {
+		sortedLines.forEach((line: Line) => {
 			const lineEl = sectionListBody.createEl("tr");
 
 			if (line.lineType === "card") {
+				const currentTypeOrder = getTypeOrder(line, cardDataByCardId);
+
+				if (currentTypeOrder !== previousTypeOrder) {
+					lineEl.classList.add("type-separator");
+					previousTypeOrder = currentTypeOrder;
+				}
+
 				const cardCountCell = lineEl.createEl("td");
 				const cardCountEl = cardCountCell.createSpan({ cls: "count" });
 

@@ -6,7 +6,7 @@
 
 .decklist__section-container table {
     width: 100%;
-	border: none;
+	border: 1px solid var(--background-modifier-border);
 }
 
 .decklist__section-container:where(th, td):not(.max) {
@@ -17,6 +17,11 @@
 .decklist th,
 .decklist td {
     border: none;
+}
+
+.type-separator td,
+.decklist tfoot {
+    border-top: 1px solid var(--background-modifier-border);
 }
 
 .decklist__section-totals .card-name {
