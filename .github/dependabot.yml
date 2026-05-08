@@ -12,7 +12,7 @@ updates:
         - "@typescript-eslint*"
     jest:
       patterns:
-        - "jest*"
+        - "*jest*"
 
 - package-ecosystem: github-actions
   directory: "/"

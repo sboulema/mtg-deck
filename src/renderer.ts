@@ -10,6 +10,7 @@ import { ObsidianPluginMtgSettings } from "./settings";
 
 const DEFAULT_SECTION_NAME = "Deck:";
 const COMMENT_DELIMITER = "#";
+const SKIP_SECTION_NAMES = ["About", "Name"];
 
 interface Line {
 	lineType: "card" | "section" | "error" | "blank" | "comment";
@@ -303,336 +304,338 @@ export const renderDecklist = async (
 	);
 	const missingCardCounts: CardCounts = {};
 
-	sections.forEach((section: string) => {
-		// Put the entire deck in containing div for styling
-		const sectionContainer = containerEl.createDiv({ cls: "decklist__section-container" });
+	sections
+		.filter(section => !SKIP_SECTION_NAMES.includes(section))
+		.forEach((section: string) => {
+			// Put the entire deck in containing div for styling
+			const sectionContainer = containerEl.createDiv({ cls: "decklist__section-container" });
 
-		// Create a heading
-		const sectionHeadingEl = sectionContainer.createEl("h3", { cls: "decklist__section-heading" });
+			// Create a heading
+			const sectionHeadingEl = sectionContainer.createEl("h3", { cls: "decklist__section-heading" });
 
-		// Create container for the table rows
-		const sectionList = sectionContainer.createEl("table");
-		const sectionListHead = sectionList.createEl("thead");
-		const sectionListHeadRow = sectionListHead.createEl("tr");
-
-		sectionListHeadRow.createEl("th", { text: "Count" });
-		sectionListHeadRow.createEl("th", { text: "Name", cls: "max" });
-
-		if (settings.decklist.showManaCosts) {
-			sectionListHeadRow.createEl("th", { text: "Cost" });
-		}
-
-		if (!settings.decklist.hidePrices) {
-			sectionListHeadRow.createEl("th", { text: "Price" });
-		}
-
-		const sectionListBody = sectionList.createEl("tbody");
-
-		const sectionMissingCardCounts: CardCounts = {};
-
-		// Sort lines by card type, preserving relative order of non-card lines
-		const sortedLines = [...linesBySection[section]].sort((a, b) => {
-			const typeOrder = getTypeOrder(a, cardDataByCardId) - getTypeOrder(b, cardDataByCardId);
-
-			if (typeOrder !== 0) {
-				return typeOrder;
+			// Treat "Name" section as a special case since it's not really a section but more of a metadata field for the deck,
+			// so we just show it as a heading without creating a table for it
+			if (section.startsWith("Name")) {
+				sectionHeadingEl.textContent = section.replace(/^Name\s+/, "");
+				sectionContainers.push(sectionContainer);
+				return;
 			}
 
-			return (a.cardName ?? "").localeCompare(b.cardName ?? "");
-		});
+			// Create container for the table rows
+			const sectionList = sectionContainer.createEl("table");
+			const sectionListHead = sectionList.createEl("thead");
+			const sectionListHeadRow = sectionListHead.createEl("tr");
 
-		let previousTypeOrder = -1;
+			sectionListHeadRow.createEl("th", { text: "Count" });
+			sectionListHeadRow.createEl("th", { text: "Name", cls: "max" });
 
-		// Create line item elements
-		sortedLines.forEach((line: Line) => {
-			const lineEl = sectionListBody.createEl("tr");
-
-			if (line.lineType === "card") {
-				const currentTypeOrder = getTypeOrder(line, cardDataByCardId);
-
-				if (currentTypeOrder !== previousTypeOrder) {
-					lineEl.classList.add("type-separator");
-					previousTypeOrder = currentTypeOrder;
-				}
-
-				const cardCountCell = lineEl.createEl("td");
-				const cardCountEl = cardCountCell.createSpan({ cls: "count" });
-
-				const cardNameCell = lineEl.createEl("td");
-				const cardNameEl = cardNameCell.createSpan({ cls: "card-name" });
-				const cardCommentsEl = cardNameCell.createSpan({
-					cls: "comment",
-					text: line.comments?.join("#") || "",
-				});
-
-				if (settings.decklist.showManaCosts) {
-					const cardCostCell = lineEl.createEl("td");
-					const cardCostEl = cardCostCell.createSpan({ cls: "card-cost" });
-
-					if (line.cardName) {
-						const cardId = nameToId(line.cardName);
-						const cardInfo = cardDataByCardId[cardId];
-
-						if (cardInfo?.mana_cost) {
-							cardInfo.mana_cost
-								.replace(/\//g, "")
-								.split("{")
-								.slice(1)
-								.forEach(part => {
-									cardCostEl.createEl("img", {
-										attr: {
-											src: `https://svgs.scryfall.io/card-symbols/${part.slice(0, -1)}.svg`,
-											width: 18,
-											height: 18,
-										}
-									});
-								});
-						}
-					}
-				}
-
-				let cardPrice;
-				let cardPriceEl;
-
-				if (!settings.decklist.hidePrices) {
-					const cardPriceCell = lineEl.createEl("td");
-					cardPriceEl = cardPriceCell.createSpan({ cls: "card-price" });
-
-					if (line.cardName) {
-						cardPrice = getCardPrice(
-							line.cardName,
-							cardDataByCardId,
-							settings
-						);
-					}
-				}
-
-				// Add hyperlink when possible
-				if (line.cardName) {
-					const cardId = nameToId(line.cardName);
-					const cardInfo = cardDataByCardId[cardId];
-					if (
-						settings.decklist.showCardNamesAsHyperlinks &&
-						cardInfo &&
-						cardInfo.scryfall_uri
-					) {
-						const cardLinkEl = cardNameEl.createEl("a");
-						cardLinkEl.href = cardInfo.scryfall_uri;
-						cardLinkEl.textContent = `${cardInfo.name}`;
-					} else {
-						cardNameEl.textContent = `${
-							(cardInfo && cardInfo.name) ||
-							line.cardName ||
-							UNKNOWN_CARD
-						}`;
-					}
-				}
-
-				if (line.errors && line.errors.length) {
-					cardNameEl.createSpan({
-						cls: "error",
-						text: line.errors?.join(",") || "",
-					});
-				}
-
-				const lineCardCount = line.cardCount || 0;
-				const lineGlobalCount =
-					line.globalCount === null ? -1 : line.globalCount || 0;
-
-				// Show missing card counts
-				if (lineGlobalCount !== -1 && lineCardCount > lineGlobalCount) {
-					const counts = cardCountEl.createSpan({ cls: "count" });
-					// Card error element
-					counts.createSpan({
-						cls: "error",
-						text: `${lineGlobalCount}`,
-					});
-					// Card counts row element
-					counts.createSpan({
-						text: ` / ${lineCardCount}`,
-					});
-					lineEl.classList.add("insufficient-count");
-
-					const cardId = nameToId(line.cardName);
-					missingCardCounts[cardId] =
-						(missingCardCounts[cardId] || 0) +
-						(lineCardCount - lineGlobalCount);
-
-					sectionMissingCardCounts[cardId] =
-						(sectionMissingCardCounts[cardId] || 0) +
-						(lineCardCount - lineGlobalCount);
-
-					if (cardPrice) {
-						cardPriceEl!.classList.add("insufficient-count");
-
-						const totalPrice: number =
-							lineCardCount * parseFloat(cardPrice);
-						const amountOwned: number =
-							lineGlobalCount * parseFloat(cardPrice);
-
-						cardPriceEl!.createSpan({
-							cls: "error",
-							text: `${
-								currencyMapping[
-									settings.decklist.preferredCurrency
-								]
-							}${amountOwned.toFixed(2)}`,
-						});
-
-						cardPriceEl!.createSpan({
-							text: ` / ${
-								currencyMapping[
-									settings.decklist.preferredCurrency
-								]
-							}${totalPrice.toFixed(2)}`,
-						});
-
-						// Add cost to total
-						sectionTotalCost[section] =
-							sectionTotalCost[section] + (totalPrice || 0.0);
-					}
-				} else {
-					cardCountEl.textContent = `${lineCardCount}`;
-
-					if (cardPrice) {
-						const totalPrice: number =
-							lineCardCount * parseFloat(cardPrice);
-						const displayPrice = `${
-							currencyMapping[settings.decklist.preferredCurrency]
-						}${totalPrice.toFixed(2)}`;
-
-						cardPriceEl!.textContent = displayPrice;
-
-						// Add cost to total
-						sectionTotalCost[section] =
-							sectionTotalCost[section] + (totalPrice || 0.0);
-					}
-				}
-
-				sectionTotalCounts[section] =
-					sectionTotalCounts[section] + (line.cardCount || 0);
-
-				if (settings.decklist.showCardPreviews) {
-					// Event handlers for card artwork popover
-					lineEl.addEventListener("mouseenter", () => {
-						const cardId = nameToId(line.cardName);
-						const cardInfo = cardDataByCardId[cardId];
-						let imgUri: string | undefined;
-						if (cardInfo) {
-							// For single-faced cards...
-							if (cardInfo.image_uris) {
-								imgUri = cardInfo.image_uris?.large;
-								// For double-faced cards...
-							} else if (
-								cardInfo.card_faces &&
-								cardInfo.card_faces.length > 1
-							) {
-								// Use the front-side of the card for preview
-								imgUri =
-									cardInfo.card_faces[0].image_uris?.large;
-							}
-							const offsetPaddingTop = 16;
-							imgElContainer.style.top = `${
-								lineEl.offsetTop + offsetPaddingTop
-							}px`;
-							imgElContainer.style.left = `${cardCommentsEl.offsetLeft}px`;
-						}
-						if (typeof imgUri !== "undefined") {
-							imgEl.src = imgUri;
-						}
-					});
-
-					lineEl.addEventListener("mouseleave", () => {
-						imgEl.src = "";
-					});
-				}
-			} else if (line.lineType === "comment") {
-				// Comments
-				lineEl.createSpan({
-					cls: "comment",
-					text: line.comments?.join(" ") || "",
-				});
-			}
-		});
-
-		const sectionListFoot = sectionList.createEl("tfoot", { cls: "decklist__section-totals" });
-		const sectionListFootRow = sectionListFoot.createEl("tr");
-		const totalCardsEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__count fit" });
-		sectionListFootRow.createEl("td", { text: "Cards" });
-		sectionListFootRow.createEl("td");
-
-		let totalCostEl;
-		if (hasCardInfo && !settings.decklist.hidePrices) {
-			totalCostEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__cost fit" });
-		}
-
-		sectionHeadingEl.textContent = `${section}`;
-
-		const sectionMissingCardIds = Object.keys(sectionMissingCardCounts);
-
-		// When there are missing cards, show fraction
-		if (sectionMissingCardIds.length) {
-			// Counts
-			const totalMissingCountInSection = Object.values(
-				sectionMissingCardCounts
-			).reduce((acc, v) => acc + v, 0);
-
-			const totalCardsOwned =
-				sectionTotalCounts[section] - totalMissingCountInSection;
-
-			// Errors
-			totalCardsEl.createSpan({
-				cls: "error",
-				text: `${totalCardsOwned}`,
-			});
-
-			// Counts
-			totalCardsEl.createSpan({
-				cls: "insufficient-count",
-				text: ` / ${sectionTotalCounts[section]}`,
-			});
-
-			const totalMissingCostInSection = Object.keys(
-				sectionMissingCardCounts
-			).reduce((acc, cardId) => {
-				const countNeeded = sectionMissingCardCounts[cardId];
-				const cardPrice: number = parseFloat(
-					getCardPrice(cardId, cardDataByCardId, settings) || "0.00"
-				);
-				return acc + cardPrice * countNeeded;
-			}, 0.0);
-
-			// Value
-			if (hasCardInfo && !settings.decklist.hidePrices) {
-				const totalValueOwned =
-					sectionTotalCost[section] - totalMissingCostInSection;
-				totalCostEl!.createSpan({
-					cls: "error",
-					text: `${
-						currencyMapping[settings.decklist.preferredCurrency]
-					}${totalValueOwned.toFixed(2)}`,
-				});
-
-				// Total value needed
-				totalCostEl!.createSpan({
-					cls: "insufficient-count",
-					text: ` / ${
-						currencyMapping[settings.decklist.preferredCurrency]
-					}${sectionTotalCost[section].toFixed(2)}`,
-				});
+			if (settings.decklist.showManaCosts) {
+				sectionListHeadRow.createEl("th", { text: "Cost" });
 			}
 
-		} else {
-			totalCardsEl.textContent = `${sectionTotalCounts[section]}`;
 			if (!settings.decklist.hidePrices) {
-				totalCostEl!.textContent = `${
-					currencyMapping[settings.decklist.preferredCurrency]
-				}${sectionTotalCost[section].toFixed(2)}`;
+				sectionListHeadRow.createEl("th", { text: "Price" });
 			}
-		}
 
-		sectionContainers.push(sectionContainer);
-	});
+			const sectionListBody = sectionList.createEl("tbody");
+
+			const sectionMissingCardCounts: CardCounts = {};
+
+			// Sort lines by card type, preserving relative order of non-card lines
+			const sortedLines = [...linesBySection[section]].sort((a, b) => {
+				const typeOrder = getTypeOrder(a, cardDataByCardId) - getTypeOrder(b, cardDataByCardId);
+
+				if (typeOrder !== 0) {
+					return typeOrder;
+				}
+
+				return (a.cardName ?? "").localeCompare(b.cardName ?? "");
+			});
+
+			let previousTypeOrder = -1;
+
+			// Create line item elements
+			sortedLines.forEach((line: Line) => {
+				const lineEl = sectionListBody.createEl("tr");
+
+				if (line.lineType === "card") {
+					const currentTypeOrder = getTypeOrder(line, cardDataByCardId);
+
+					if (currentTypeOrder !== previousTypeOrder) {
+						lineEl.classList.add("type-separator");
+						previousTypeOrder = currentTypeOrder;
+					}
+
+					const cardCountCell = lineEl.createEl("td");
+					const cardCountEl = cardCountCell.createSpan({ cls: "count" });
+
+					const cardNameCell = lineEl.createEl("td");
+					const cardNameEl = cardNameCell.createSpan({ cls: "card-name" });
+					const cardCommentsEl = cardNameCell.createSpan({
+						cls: "comment",
+						text: line.comments?.join("#") || "",
+					});
+
+					if (settings.decklist.showManaCosts) {
+						const cardCostCell = lineEl.createEl("td");
+						const cardCostEl = cardCostCell.createSpan({ cls: "card-cost" });
+
+						if (line.cardName) {
+							const cardId = nameToId(line.cardName);
+							const cardInfo = cardDataByCardId[cardId];
+
+							if (cardInfo?.mana_cost) {
+								cardInfo.mana_cost
+									.replace(/\//g, "")
+									.split("{")
+									.slice(1)
+									.forEach(part => {
+										cardCostEl.createEl("img", {
+											attr: {
+												src: `https://svgs.scryfall.io/card-symbols/${part.slice(0, -1)}.svg`,
+												width: 18,
+												height: 18,
+											}
+										});
+									});
+							}
+						}
+					}
+
+					let cardPrice;
+					let cardPriceEl;
+
+					if (!settings.decklist.hidePrices) {
+						const cardPriceCell = lineEl.createEl("td");
+						cardPriceEl = cardPriceCell.createSpan({ cls: "card-price" });
+
+						if (line.cardName) {
+							cardPrice = getCardPrice(
+								line.cardName,
+								cardDataByCardId,
+								settings
+							);
+						}
+					}
+
+					// Add hyperlink when possible
+					if (line.cardName) {
+						const cardId = nameToId(line.cardName);
+						const cardInfo = cardDataByCardId[cardId];
+						if (
+							settings.decklist.showCardNamesAsHyperlinks &&
+							cardInfo &&
+							cardInfo.scryfall_uri
+						) {
+							const cardLinkEl = cardNameEl.createEl("a");
+							cardLinkEl.href = cardInfo.scryfall_uri;
+							cardLinkEl.textContent = `${cardInfo.name}`;
+						} else {
+							cardNameEl.textContent = `${(cardInfo && cardInfo.name) ||
+								line.cardName ||
+								UNKNOWN_CARD
+								}`;
+						}
+					}
+
+					if (line.errors && line.errors.length) {
+						cardNameEl.createSpan({
+							cls: "error",
+							text: line.errors?.join(",") || "",
+						});
+					}
+
+					const lineCardCount = line.cardCount || 0;
+					const lineGlobalCount =
+						line.globalCount === null ? -1 : line.globalCount || 0;
+
+					// Show missing card counts
+					if (lineGlobalCount !== -1 && lineCardCount > lineGlobalCount) {
+						const counts = cardCountEl.createSpan({ cls: "count" });
+						// Card error element
+						counts.createSpan({
+							cls: "error",
+							text: `${lineGlobalCount}`,
+						});
+						// Card counts row element
+						counts.createSpan({
+							text: ` / ${lineCardCount}`,
+						});
+						lineEl.classList.add("insufficient-count");
+
+						const cardId = nameToId(line.cardName);
+						missingCardCounts[cardId] =
+							(missingCardCounts[cardId] || 0) +
+							(lineCardCount - lineGlobalCount);
+
+						sectionMissingCardCounts[cardId] =
+							(sectionMissingCardCounts[cardId] || 0) +
+							(lineCardCount - lineGlobalCount);
+
+						if (cardPrice) {
+							cardPriceEl!.classList.add("insufficient-count");
+
+							const totalPrice: number =
+								lineCardCount * parseFloat(cardPrice);
+							const amountOwned: number =
+								lineGlobalCount * parseFloat(cardPrice);
+
+							cardPriceEl!.createSpan({
+								cls: "error",
+								text: `${currencyMapping[
+									settings.decklist.preferredCurrency
+									]
+									}${amountOwned.toFixed(2)}`,
+							});
+
+							cardPriceEl!.createSpan({
+								text: ` / ${currencyMapping[
+									settings.decklist.preferredCurrency
+									]
+									}${totalPrice.toFixed(2)}`,
+							});
+
+							// Add cost to total
+							sectionTotalCost[section] =
+								sectionTotalCost[section] + (totalPrice || 0.0);
+						}
+					} else {
+						cardCountEl.textContent = `${lineCardCount}`;
+
+						if (cardPrice) {
+							const totalPrice: number =
+								lineCardCount * parseFloat(cardPrice);
+							const displayPrice = `${currencyMapping[settings.decklist.preferredCurrency]
+								}${totalPrice.toFixed(2)}`;
+
+							cardPriceEl!.textContent = displayPrice;
+
+							// Add cost to total
+							sectionTotalCost[section] =
+								sectionTotalCost[section] + (totalPrice || 0.0);
+						}
+					}
+
+					sectionTotalCounts[section] =
+						sectionTotalCounts[section] + (line.cardCount || 0);
+
+					if (settings.decklist.showCardPreviews) {
+						// Event handlers for card artwork popover
+						lineEl.addEventListener("mouseenter", () => {
+							const cardId = nameToId(line.cardName);
+							const cardInfo = cardDataByCardId[cardId];
+							let imgUri: string | undefined;
+							if (cardInfo) {
+								// For single-faced cards...
+								if (cardInfo.image_uris) {
+									imgUri = cardInfo.image_uris?.large;
+									// For double-faced cards...
+								} else if (
+									cardInfo.card_faces &&
+									cardInfo.card_faces.length > 1
+								) {
+									// Use the front-side of the card for preview
+									imgUri =
+										cardInfo.card_faces[0].image_uris?.large;
+								}
+								const offsetPaddingTop = 16;
+								imgElContainer.style.top = `${lineEl.offsetTop + offsetPaddingTop
+									}px`;
+								imgElContainer.style.left = `${cardCommentsEl.offsetLeft}px`;
+							}
+							if (typeof imgUri !== "undefined") {
+								imgEl.src = imgUri;
+							}
+						});
+
+						lineEl.addEventListener("mouseleave", () => {
+							imgEl.src = "";
+						});
+					}
+				} else if (line.lineType === "comment") {
+					// Comments
+					lineEl.createSpan({
+						cls: "comment",
+						text: line.comments?.join(" ") || "",
+					});
+				}
+			});
+
+			const sectionListFoot = sectionList.createEl("tfoot", { cls: "decklist__section-totals" });
+			const sectionListFootRow = sectionListFoot.createEl("tr");
+			const totalCardsEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__count fit" });
+			sectionListFootRow.createEl("td", { text: "Cards" });
+			sectionListFootRow.createEl("td");
+
+			let totalCostEl;
+			if (hasCardInfo && !settings.decklist.hidePrices) {
+				totalCostEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__cost fit" });
+			}
+
+			sectionHeadingEl.textContent = `${section}`;
+
+			const sectionMissingCardIds = Object.keys(sectionMissingCardCounts);
+
+			// When there are missing cards, show fraction
+			if (sectionMissingCardIds.length) {
+				// Counts
+				const totalMissingCountInSection = Object.values(
+					sectionMissingCardCounts
+				).reduce((acc, v) => acc + v, 0);
+
+				const totalCardsOwned =
+					sectionTotalCounts[section] - totalMissingCountInSection;
+
+				// Errors
+				totalCardsEl.createSpan({
+					cls: "error",
+					text: `${totalCardsOwned}`,
+				});
+
+				// Counts
+				totalCardsEl.createSpan({
+					cls: "insufficient-count",
+					text: ` / ${sectionTotalCounts[section]}`,
+				});
+
+				const totalMissingCostInSection = Object.keys(
+					sectionMissingCardCounts
+				).reduce((acc, cardId) => {
+					const countNeeded = sectionMissingCardCounts[cardId];
+					const cardPrice: number = parseFloat(
+						getCardPrice(cardId, cardDataByCardId, settings) || "0.00"
+					);
+					return acc + cardPrice * countNeeded;
+				}, 0.0);
+
+				// Value
+				if (hasCardInfo && !settings.decklist.hidePrices) {
+					const totalValueOwned =
+						sectionTotalCost[section] - totalMissingCostInSection;
+					totalCostEl!.createSpan({
+						cls: "error",
+						text: `${currencyMapping[settings.decklist.preferredCurrency]
+							}${totalValueOwned.toFixed(2)}`,
+					});
+
+					// Total value needed
+					totalCostEl!.createSpan({
+						cls: "insufficient-count",
+						text: ` / ${currencyMapping[settings.decklist.preferredCurrency]
+							}${sectionTotalCost[section].toFixed(2)}`,
+					});
+				}
+
+			} else {
+				totalCardsEl.textContent = `${sectionTotalCounts[section]}`;
+				if (!settings.decklist.hidePrices) {
+					totalCostEl!.textContent = `${currencyMapping[settings.decklist.preferredCurrency]
+						}${sectionTotalCost[section].toFixed(2)}`;
+				}
+			}
+
+			sectionContainers.push(sectionContainer);
+		});
 
 	sectionContainers.forEach((sectionContainer) =>
 		containerEl.appendChild(sectionContainer)
@@ -703,9 +706,8 @@ export const renderDecklist = async (
 		if (hasCardInfo && !settings.decklist.hidePrices) {
 			buylistLineEl.createSpan({
 				cls: "decklist__section-totals",
-				text: `${
-					currencyMapping[settings.decklist.preferredCurrency]
-				}${totalCostOfBuylist.toFixed(2)}`,
+				text: `${currencyMapping[settings.decklist.preferredCurrency]
+					}${totalCostOfBuylist.toFixed(2)}`,
 			});
 		}
 	}
