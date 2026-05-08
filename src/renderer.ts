@@ -286,11 +286,6 @@ export const renderDecklist = async (
 	// Make elements from parsedLines
 	const sectionContainers: Element[] = [];
 
-	// Header section
-	const header = containerEl.createDiv({ cls: "header" });
-	const imgElContainer = header.createDiv({ cls: "card-image-container" });
-	const imgEl = imgElContainer.createEl("img", { cls: "card-image" });
-
 	// Footer section
 	const footer = containerEl.createDiv({ cls: "footer" });
 
@@ -309,6 +304,8 @@ export const renderDecklist = async (
 		.forEach((section: string) => {
 			// Put the entire deck in containing div for styling
 			const sectionContainer = containerEl.createDiv({ cls: "decklist__section-container" });
+			const imgElContainer = sectionContainer.createDiv({ cls: "card-image-container" });
+			const imgEl = imgElContainer.createEl("img", { cls: "card-image" });
 
 			// Create a heading
 			const sectionHeadingEl = sectionContainer.createEl("h3", { cls: "decklist__section-heading" });
@@ -383,9 +380,11 @@ export const renderDecklist = async (
 						if (line.cardName) {
 							const cardId = nameToId(line.cardName);
 							const cardInfo = cardDataByCardId[cardId];
+							const cardManaCost = cardInfo?.mana_cost
+								?? cardInfo?.card_faces?.[0]?.mana_cost;
 
-							if (cardInfo?.mana_cost) {
-								cardInfo.mana_cost
+							if (cardManaCost) {
+								cardManaCost
 									.replace(/\//g, "")
 									.split("{")
 									.slice(1)
@@ -484,14 +483,14 @@ export const renderDecklist = async (
 								cls: "error",
 								text: `${currencyMapping[
 									settings.decklist.preferredCurrency
-									]
+								]
 									}${amountOwned.toFixed(2)}`,
 							});
 
 							cardPriceEl!.createSpan({
 								text: ` / ${currencyMapping[
 									settings.decklist.preferredCurrency
-									]
+								]
 									}${totalPrice.toFixed(2)}`,
 							});
 
@@ -519,37 +518,70 @@ export const renderDecklist = async (
 					sectionTotalCounts[section] =
 						sectionTotalCounts[section] + (line.cardCount || 0);
 
-					if (settings.decklist.showCardPreviews) {
-						// Event handlers for card artwork popover
+					// Show card preview on hover
+					if (settings.decklist.showCardPreviews && line.cardName) {
+						const cardId = nameToId(line.cardName);
+						const cardInfo = cardDataByCardId[cardId];
+						const isDoubleFaced = (cardInfo?.card_faces?.length ?? 0) > 1
+							&& !cardInfo?.image_uris;
+
+						let faceIndex = 0;
+
 						lineEl.addEventListener("mouseenter", () => {
 							const cardId = nameToId(line.cardName);
 							const cardInfo = cardDataByCardId[cardId];
-							let imgUri: string | undefined;
-							if (cardInfo) {
-								// For single-faced cards...
+							if (!cardInfo) return;
+
+							faceIndex = 0;
+
+							const getImgUri = (index: number): string | undefined => {
 								if (cardInfo.image_uris) {
-									imgUri = cardInfo.image_uris?.large;
-									// For double-faced cards...
-								} else if (
-									cardInfo.card_faces &&
-									cardInfo.card_faces.length > 1
-								) {
-									// Use the front-side of the card for preview
-									imgUri =
-										cardInfo.card_faces[0].image_uris?.large;
+									return cardInfo.image_uris.large;
 								}
-								const offsetPaddingTop = 16;
-								imgElContainer.style.top = `${lineEl.offsetTop + offsetPaddingTop
-									}px`;
-								imgElContainer.style.left = `${cardCommentsEl.offsetLeft}px`;
-							}
-							if (typeof imgUri !== "undefined") {
+								return cardInfo.card_faces?.[index]?.image_uris?.large;
+							};
+
+							imgElContainer.style.display = "block";
+							imgElContainer.style.top = `${lineEl.offsetTop}px`;
+							imgElContainer.style.right = "50px";
+							imgElContainer.style.left = "auto";
+
+							const imgUri = getImgUri(faceIndex);
+							if (imgUri) {
 								imgEl.src = imgUri;
+							}
+
+							if (isDoubleFaced) {
+								imgEl.style.cursor = "pointer";
+								imgEl.onclick = () => {
+									faceIndex = faceIndex === 0 ? 1 : 0;
+									const uri = getImgUri(faceIndex);
+									if (uri) {
+										imgEl.src = uri;
+									}
+								};
+							} else {
+								imgEl.style.cursor = "default";
+								imgEl.onclick = null;
 							}
 						});
 
-						lineEl.addEventListener("mouseleave", () => {
-							imgEl.src = "";
+						lineEl.addEventListener("mouseleave", (e) => {
+							// Only hide if we're not moving onto the image container
+							if (!imgElContainer.contains(e.relatedTarget as Node)) {
+								imgElContainer.style.display = "none";
+								imgEl.src = "";
+								imgEl.onclick = null;
+							}
+						});
+
+						imgElContainer.addEventListener("mouseleave", (e) => {
+							// Only hide if we're not moving back onto a table row
+							if (!sectionList.contains(e.relatedTarget as Node)) {
+								imgElContainer.style.display = "none";
+								imgEl.src = "";
+								imgEl.onclick = null;
+							}
 						});
 					}
 				} else if (line.lineType === "comment") {
