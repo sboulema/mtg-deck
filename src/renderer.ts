@@ -69,9 +69,9 @@ export const getCardPrice = (
 	const cardId = nameToId(cardName);
 	const cardData = cardDataById[cardId];
 	const preferredCurrency = settings.decklist.preferredCurrency;
-	const hidePrices = settings.decklist.hidePrices;
+	const showCardPrices = settings.decklist.showCardPrices;
 
-	if (!cardData || hidePrices) {
+	if (!cardData || !showCardPrices) {
 		return null;
 	} else {
 		if (preferredCurrency === "eur") {
@@ -330,7 +330,7 @@ export const renderDecklist = async (
 				sectionListHeadRow.createEl("th", { text: "Cost" });
 			}
 
-			if (!settings.decklist.hidePrices) {
+			if (settings.decklist.showCardPrices) {
 				sectionListHeadRow.createEl("th", { text: "Price" });
 			}
 
@@ -404,7 +404,7 @@ export const renderDecklist = async (
 					let cardPrice;
 					let cardPriceEl;
 
-					if (!settings.decklist.hidePrices) {
+					if (settings.decklist.showCardPrices) {
 						const cardPriceCell = lineEl.createEl("td");
 						cardPriceEl = cardPriceCell.createSpan({ cls: "card-price" });
 
@@ -600,7 +600,7 @@ export const renderDecklist = async (
 			sectionListFootRow.createEl("td");
 
 			let totalCostEl;
-			if (hasCardInfo && !settings.decklist.hidePrices) {
+			if (hasCardInfo && settings.decklist.showCardPrices) {
 				totalCostEl = sectionListFootRow.createEl("td", { cls: "decklist__section-totals__cost fit" });
 			}
 
@@ -641,7 +641,7 @@ export const renderDecklist = async (
 				}, 0.0);
 
 				// Value
-				if (hasCardInfo && !settings.decklist.hidePrices) {
+				if (hasCardInfo && settings.decklist.showCardPrices) {
 					const totalValueOwned =
 						sectionTotalCost[section] - totalMissingCostInSection;
 					totalCostEl!.createSpan({
@@ -660,7 +660,7 @@ export const renderDecklist = async (
 
 			} else {
 				totalCardsEl.textContent = `${sectionTotalCounts[section]}`;
-				if (!settings.decklist.hidePrices) {
+				if (settings.decklist.showCardPrices) {
 					totalCostEl!.textContent = `${currencyMapping[settings.decklist.preferredCurrency]
 						}${sectionTotalCost[section].toFixed(2)}`;
 				}
@@ -735,7 +735,7 @@ export const renderDecklist = async (
 			text: "cards",
 		});
 
-		if (hasCardInfo && !settings.decklist.hidePrices) {
+		if (hasCardInfo && settings.decklist.showCardPrices) {
 			buylistLineEl.createSpan({
 				cls: "decklist__section-totals",
 				text: `${currencyMapping[settings.decklist.preferredCurrency]

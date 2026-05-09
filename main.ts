@@ -22,7 +22,7 @@ const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 		showCardNamesAsHyperlinks: true,
 		showCardPreviews: true,
 		showBuylist: true,
-		hidePrices: false,
+		showCardPrices: true,
 		showManaCosts: true,
 	},
 };
@@ -220,13 +220,13 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Hide prices")
-			.setDesc("Toggles card prices in decklists")
+			.setName("Show card prices")
+			.setDesc("Enables card prices to be displayed in decklists")
 			.addToggle((toggle) =>
 				toggle
-					.setValue(this.plugin.settings.decklist.hidePrices)
+					.setValue(this.plugin.settings.decklist.showCardPrices)
 					.onChange(async (value: boolean) => {
-						this.plugin.settings.decklist.hidePrices = value;
+						this.plugin.settings.decklist.showCardPrices = value;
 						await this.plugin.saveSettings();
 					})
 			);

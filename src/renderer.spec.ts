@@ -32,7 +32,7 @@ describe("Renderer", () => {
             showCardNamesAsHyperlinks: true,
             showCardPreviews: true,
             showBuylist: true,
-            hidePrices: false,
+            showCardPrices: true,
             showManaCosts: true,
         },
     };
@@ -57,7 +57,7 @@ describe("Renderer", () => {
                     ...settings,
                     decklist: {
                         ...settings.decklist,
-                        hidePrices: true,
+                        showCardPrices: false,
                     },
                 },
                 fakeFetcher

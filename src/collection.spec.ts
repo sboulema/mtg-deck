@@ -52,7 +52,7 @@ describe("Collection", () => {
                 showCardNamesAsHyperlinks: true,
                 showCardPreviews: true,
                 showBuylist: true,
-                hidePrices: false,
+                showCardPrices: true,
                 showManaCosts: true,
             },
         };
