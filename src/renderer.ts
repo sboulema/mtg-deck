@@ -304,6 +304,13 @@ export const renderDecklist = async (
 		.forEach((section: string) => {
 			// Put the entire deck in containing div for styling
 			const sectionContainer = containerEl.createDiv({ cls: "decklist__section-container" });
+
+			const sectionHeadingContainer = sectionContainer.createDiv({ cls: "decklist__section-heading-container" });
+			const toggleViewBtn = sectionHeadingContainer.createEl("button", {
+				text: "Visual View",
+				cls: "decklist__toggle-view"
+			});
+
 			const imgElContainer = sectionContainer.createDiv({ cls: "card-image-container" });
 			const imgEl = imgElContainer.createEl("img", { cls: "card-image" });
 
@@ -317,6 +324,18 @@ export const renderDecklist = async (
 				sectionContainers.push(sectionContainer);
 				return;
 			}
+
+			// Create conttained for the visual deck view
+			const cardGrid = sectionContainer.createDiv({ cls: "decklist__card-grid" });
+			cardGrid.style.display = "none";
+
+			// Toggle between table and grid
+			toggleViewBtn.addEventListener("click", () => {
+				const isGridVisible = cardGrid.style.display !== "none";
+				cardGrid.style.display = isGridVisible ? "none" : "flex";
+				sectionList.style.display = isGridVisible ? "" : "none";
+				toggleViewBtn.textContent = isGridVisible ? "Visual View" : "List View";
+			});
 
 			// Create container for the table rows
 			const sectionList = sectionContainer.createEl("table");
@@ -348,6 +367,28 @@ export const renderDecklist = async (
 
 				return (a.cardName ?? "").localeCompare(b.cardName ?? "");
 			});
+
+			// Populate grid with distinct cards
+			sortedLines
+				.filter(line => line.lineType === "card" && line.cardName)
+				.forEach(line => {
+					const cardId = nameToId(line.cardName!);
+					const cardInfo = cardDataByCardId[cardId];
+					const imgUri = cardInfo?.image_uris?.normal
+						?? cardInfo?.card_faces?.[0]?.image_uris?.normal;
+
+					if (!imgUri) return;
+
+					const cardEl = cardGrid.createDiv({ cls: "decklist__card-grid__item" });
+					cardEl.createEl("img", {
+						attr: { src: imgUri },
+						cls: "decklist__card-grid__image"
+					});
+					cardEl.createSpan({
+						cls: "decklist__card-grid__count",
+						text: `${line.cardCount}x`
+					});
+				});
 
 			let previousTypeOrder = -1;
 
