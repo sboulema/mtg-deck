@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 		showBuylist: true,
 		showCardPrices: true,
 		showManaCosts: true,
+		showCardRarities: true,
 	},
 };
 
@@ -239,6 +240,18 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.decklist.showManaCosts)
 					.onChange(async (value: boolean) => {
 						this.plugin.settings.decklist.showManaCosts = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Show card rarities")
+			.setDesc("Enables card rarities to be displayed for each card")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.decklist.showCardRarities)
+					.onChange(async (value: boolean) => {
+						this.plugin.settings.decklist.showCardRarities = value;
 						await this.plugin.saveSettings();
 					})
 			);

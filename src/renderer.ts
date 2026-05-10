@@ -356,6 +356,8 @@ export const renderDecklist = async (
 				const lineEl = sectionListBody.createEl("tr");
 
 				if (line.lineType === "card") {
+					const cardId = nameToId(line.cardName);
+					const cardInfo = cardDataByCardId[cardId];
 					const currentTypeOrder = getTypeOrder(line, cardDataByCardId);
 
 					if (currentTypeOrder !== previousTypeOrder) {
@@ -363,9 +365,16 @@ export const renderDecklist = async (
 						previousTypeOrder = currentTypeOrder;
 					}
 
+					// Card count cell
 					const cardCountCell = lineEl.createEl("td");
+
+					if (settings.decklist.showManaCosts) {
+						cardCountCell.createSpan({ cls: `card-rarity ${cardInfo?.rarity}` });
+					}
+
 					const cardCountEl = cardCountCell.createSpan({ cls: "count" });
 
+					// Card name cell
 					const cardNameCell = lineEl.createEl("td");
 					const cardNameEl = cardNameCell.createSpan({ cls: "card-name" });
 					const cardCommentsEl = cardNameCell.createSpan({
@@ -373,13 +382,12 @@ export const renderDecklist = async (
 						text: line.comments?.join("#") || "",
 					});
 
+					// Card cost cell (if enabled in settings)
 					if (settings.decklist.showManaCosts) {
 						const cardCostCell = lineEl.createEl("td");
 						const cardCostEl = cardCostCell.createSpan({ cls: "card-cost" });
 
 						if (line.cardName) {
-							const cardId = nameToId(line.cardName);
-							const cardInfo = cardDataByCardId[cardId];
 							const cardManaCost = cardInfo?.mana_cost
 								?? cardInfo?.card_faces?.[0]?.mana_cost;
 

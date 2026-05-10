@@ -34,6 +34,7 @@ describe("Renderer", () => {
             showBuylist: true,
             showCardPrices: true,
             showManaCosts: true,
+            showCardRarities: true,
         },
     };
 

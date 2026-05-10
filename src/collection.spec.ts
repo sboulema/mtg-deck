@@ -54,6 +54,7 @@ describe("Collection", () => {
                 showBuylist: true,
                 showCardPrices: true,
                 showManaCosts: true,
+                showCardRarities: true,
             },
         };
 

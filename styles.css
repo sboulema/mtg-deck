@@ -61,6 +61,35 @@ span.comment {
     pointer-events: auto;
 }
 
+.card-rarity {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.card-rarity.common {
+	background-color: black;
+}
+
+.card-rarity.uncommon {
+	background-color: silver;
+}
+
+.card-rarity.rare {
+	background-color: #ffd700;
+}
+
+.card-rarity.mythic {
+	background-color: #d06d34;
+}
+
+.card-rarity.special {
+	background-color: #73378F;
+}
+
 .count {
 	flex: 1;
 }

@@ -22,5 +22,7 @@ export interface ObsidianPluginMtgSettings {
 		showCardPrices: boolean;
 		// Show mana costs
 		showManaCosts: boolean;
+		// Show card rarities
+		showCardRarities: boolean;
 	};
 }
