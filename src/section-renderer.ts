@@ -89,7 +89,13 @@ export const renderSection = (
 	const sectionMissingCardCounts: CardCounts = {};
 
 	// Card grid (visual view)
-	const cardGrid = buildCardGrid(sectionContainer, sortLines(lines, cardDataByCardId), cardDataByCardId);
+	const cardGrid = buildCardGrid(
+		sectionContainer,
+		sortLines(lines, cardDataByCardId),
+		cardDataByCardId,
+		imgElContainer,
+		imgEl
+	);
 	setupGridToggle(toggleViewBtn, cardGrid, sectionList);
 
 	// Sort and render lines
