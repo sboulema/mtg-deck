@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, Plugin, PluginSettingTab, Setting, Vault } from "obsidian";
 import {
 	DEFAULT_COLLECTION_COUNT_COLUMN,
 	DEFAULT_COLLECTION_FILE_EXTENSION,
@@ -27,6 +27,31 @@ const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 		showCardRarities: true,
 	},
 };
+
+const formats = [
+	"standard",
+	"future",
+	"historic",
+	"timeless",
+	"gladiator",
+	"pioneer",
+	"modern",
+	"legacy",
+	"pauper",
+	"vintage",
+	"penny",
+	"commander",
+	"oathbreaker",
+	"standardbrawl",
+	"brawl",
+	"alchemy",
+	"paupercommander",
+	"duel",
+	"oldschool",
+	"premodern",
+	"predh",
+	"tlr"
+];
 
 export default class ObsidianPluginMtg extends Plugin {
 	settings: ObsidianPluginMtgSettings;
@@ -57,30 +82,15 @@ export default class ObsidianPluginMtg extends Plugin {
 			this.cardCounts = await syncCounts(vault, this.settings);
 		});
 
-		this.registerMarkdownCodeBlockProcessor(
-			"mtg-deck",
-			async (source: string, el: HTMLElement, ctx) => {
-				// Sync card counts once if they haven't been already
-				if (!this.cardCounts) {
-					this.cardCounts = await syncCounts(vault, this.settings);
-				}
+		this.registerMarkdownCodeBlockProcessor("mtg-deck", async (source: string, el: HTMLElement, ctx) => {
+			await this.renderDecklist(vault, source, el, null);
+		});
 
-				try {
-					await renderDecklist(
-						el,
-						source,
-						this.cardCounts,
-						this.settings
-					);
-				} catch (err) {
-					console.error(err);
-					el.createDiv({
-						text: String(err),
-						cls: "obsidian-plugin-mtg-error",
-					});
-				}
-			}
-		);
+		formats.forEach(format => {
+			this.registerMarkdownCodeBlockProcessor(`mtg-deck-${format}`, async (source: string, el: HTMLElement, ctx) => {
+				await this.renderDecklist(vault, source, el, format);
+			});
+		});
 	}
 
 	onunload() {}
@@ -95,6 +105,29 @@ export default class ObsidianPluginMtg extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	async renderDecklist(vault: Vault, source: string, el: HTMLElement, format: string | null = null) {
+		// Sync card counts once if they haven't been already
+		if (!this.cardCounts) {
+			this.cardCounts = await syncCounts(vault, this.settings);
+		}
+
+		try {
+			await renderDecklist(
+				el,
+				source,
+				this.cardCounts,
+				this.settings,
+				format
+			);
+		} catch (err) {
+			console.error(err);
+			el.createDiv({
+				text: String(err),
+				cls: "obsidian-plugin-mtg-error",
+			});
+		}
 	}
 }
 

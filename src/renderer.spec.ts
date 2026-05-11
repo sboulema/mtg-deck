@@ -10,6 +10,7 @@ import {
     EXAMPLE_DECK_1_HTML,
     EXAMPLE_DECK_1_HTML_WITHOUT_PRICES,
 } from "../jest/fixtures/content";
+import { format } from "path/win32";
 
 const dom = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
 const doc = dom.window.document;
@@ -45,6 +46,7 @@ describe("Renderer", () => {
                 EXAMPLE_DECK_1,
                 EXAMPLE_COLLECTION,
                 settings,
+                null,
                 fakeFetcher
             );
             expect(el.innerHTML.trim()).toEqual(EXAMPLE_DECK_1_HTML.trim());
@@ -61,6 +63,7 @@ describe("Renderer", () => {
                         showCardPrices: false,
                     },
                 },
+                null,
                 fakeFetcher
             );
             expect(el.innerHTML.trim()).toEqual(

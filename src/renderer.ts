@@ -9,11 +9,12 @@ import { renderSection, renderSectionSkeleton } from "./section-renderer";
 export { getCardPrice, fetchCardDataFromScryfall };
 
 export const renderDecklist = async (
-	root: Element,
-	source: string,
-	cardCounts: CardCounts,
-	settings: ObsidianPluginMtgSettings,
-	dataFetcher = fetchCardDataFromScryfall
+    root: Element,
+    source: string,
+    cardCounts: CardCounts,
+    settings: ObsidianPluginMtgSettings,
+    format: string | null = null,
+    dataFetcher = fetchCardDataFromScryfall
 ): Promise<Element> => {
     const containerEl = root.createDiv({ cls: "decklist" });
     const lines = source.split("\n");
@@ -75,6 +76,7 @@ export const renderDecklist = async (
             missingCardCounts,
             sectionTotalCounts,
             sectionTotalCost,
+            format,
         });
         sectionContainers[i].replaceWith(enriched);
     });

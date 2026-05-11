@@ -7,6 +7,7 @@ import { cardTypeIcons, cardTypeOrder, getTypeCounts, getTypeOrder, sortLines } 
 import { setupCardPreview } from "./card-preview";
 import { buildCardGrid, setupGridToggle } from "./card-grid";
 import { sanitizeHTMLToDom } from "obsidian";
+import { validateDecklist } from "./validator";
 
 export interface SectionRenderContext {
 	section: string;
@@ -17,6 +18,7 @@ export interface SectionRenderContext {
 	missingCardCounts: CardCounts;
 	sectionTotalCounts: Record<string, number>;
 	sectionTotalCost: Record<string, number>;
+	format: string | null;
 }
 
 export const renderSection = (
@@ -32,6 +34,7 @@ export const renderSection = (
 		missingCardCounts,
 		sectionTotalCounts,
 		sectionTotalCost,
+		format,
 	} = ctx;
 
 	const sectionContainer = containerEl.createDiv({
@@ -311,6 +314,26 @@ export const renderSection = (
 		totalCardsEl.textContent = `${sectionTotalCounts[section]}`;
 		if (settings.decklist.showCardPrices && totalCostEl) {
 			totalCostEl.textContent = `${currencyMapping[settings.decklist.preferredCurrency]}${sectionTotalCost[section].toFixed(2)}`;
+		}
+	}
+
+	// Validation errors in footer
+	if (format) {
+		const validation = validateDecklist(sortedLines, cardDataByCardId, format);
+
+		if (validation.errors.length > 0) {
+			const validationRow = sectionListFoot.createEl("tr");
+			const validationCell = validationRow.createEl("td", {
+				attr: { colspan: "4" },
+				cls: "decklist__validation-errors"
+			});
+
+			validation.errors.forEach(error => {
+				validationCell.createDiv({
+					cls: `decklist__validation-error decklist__validation-error--${error.type}`,
+					text: `⚠ ${error.message}`,
+				});
+			});
 		}
 	}
 

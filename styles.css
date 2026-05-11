@@ -12,7 +12,7 @@
 
 .decklist__section-container table {
     width: 100%;
-	border: 1px solid var(--background-modifier-border);
+	border: var(--table-border-width) solid var(--table-border-color);
 }
 
 .decklist__section-container:where(th, td):not(.max) {
@@ -27,7 +27,7 @@
 
 .type-separator td,
 .decklist tfoot {
-    border-top: 1px solid var(--background-modifier-border);
+    border-top: var(--table-border-width) solid var(--table-border-color);
 }
 
 .type-summary {
@@ -47,6 +47,21 @@
 .type-summary__item svg {
     vertical-align: middle;
     position: relative;
+}
+
+/* Deck format validation */
+
+.decklist__validation-errors {
+    border-top: var(--table-border-width) solid var(--table-border-color) !important;
+}
+
+.decklist__validation-error--banned,
+.decklist__validation-error--not_legal {
+    color: #a33;
+}
+
+.decklist__validation-error--restricted {
+    color: #c87000;
 }
 
 /* Card */
