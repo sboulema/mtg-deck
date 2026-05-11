@@ -28,8 +28,23 @@
     border-top: 1px solid var(--background-modifier-border);
 }
 
-.decklist__section-totals .card-name {
-	flex: 4;
+.type-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.type-summary__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+	margin-right: 5px;
+}
+
+.type-summary__item svg {
+    vertical-align: middle;
+    position: relative;
 }
 
 /* Card */

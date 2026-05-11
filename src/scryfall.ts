@@ -1,3 +1,4 @@
+import { nameToId } from "./collection";
 import { promiseWrappedRequest } from "./http";
 
 export type CardIdentifier =
@@ -187,4 +188,39 @@ export const getMultipleCardData = async (
     };
 
     return request(params);
+};
+
+export const fetchCardDataFromScryfall = async (
+	distinctCards: CardIdentifier[]
+): Promise<Record<string, CardData>> => {
+	const batches: CardIdentifier[][] = [];
+	let currentBatch: CardIdentifier[] = [];
+	batches.push(currentBatch);
+
+	distinctCards.forEach((identifier: CardIdentifier) => {
+		if (currentBatch.length === MAX_SCRYFALL_BATCH_SIZE) {
+			batches.push(currentBatch);
+			currentBatch = [];
+		}
+		currentBatch.push(identifier);
+	});
+
+	batches.push(currentBatch);
+
+	const cardDataInBatches: ScryfallResponse[] = await Promise.all(
+		batches.map((batch) => getMultipleCardData(batch))
+	);
+
+	const cardDataByCardId: Record<string, CardData> = {};
+
+	cardDataInBatches.forEach((batch) => {
+		batch.data.forEach((card: CardData) => {
+			if (card.name) {
+				const cardId = nameToId(card.name);
+				cardDataByCardId[cardId] = card;
+			}
+		});
+	});
+
+	return cardDataByCardId;
 };
