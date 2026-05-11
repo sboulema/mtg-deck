@@ -32,12 +32,22 @@ export const setupCardPreview = (
 
 		faceIndex = 0;
 
-		imgElContainer.style.display = "block";
-		imgElContainer.style.top = `${lineEl.offsetTop}px`;
-		imgElContainer.style.right = "50px";
-		imgElContainer.style.left = "auto";
+		const getImgUri = (index: number): string | undefined => {
+			if (cardInfo.image_uris) {
+				return cardInfo.image_uris.large;
+			}
+			return cardInfo.card_faces?.[index]?.image_uris?.large;
+		};
 
-		const imgUri = getImgUri(cardInfo, faceIndex);
+		const rect = lineEl.getBoundingClientRect();
+		imgElContainer.style.display = "block";
+		imgElContainer.style.position = "fixed";
+		imgElContainer.style.top = `${rect.top}px`;
+		imgElContainer.style.right = `${window.innerWidth - rect.right}px`;
+		imgElContainer.style.left = "auto";
+		imgElContainer.style.zIndex = "1000";
+
+		const imgUri = getImgUri(faceIndex);
 		if (imgUri) {
 			imgEl.src = imgUri;
 		}
@@ -46,7 +56,7 @@ export const setupCardPreview = (
 			imgEl.style.cursor = "pointer";
 			imgEl.onclick = () => {
 				faceIndex = faceIndex === 0 ? 1 : 0;
-				const uri = getImgUri(cardInfo, faceIndex);
+				const uri = getImgUri(faceIndex);
 				if (uri) {
 					imgEl.src = uri;
 				}

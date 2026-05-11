@@ -108,7 +108,11 @@ export const renderSection = (
 
 			// Count cell
 			const cardCountCell = lineEl.createEl("td");
-			cardCountCell.createSpan({ cls: `card-rarity ${cardInfo?.rarity}` });
+
+			if (settings.decklist.showCardRarities) {
+				cardCountCell.createSpan({ cls: `card-rarity ${cardInfo?.rarity}` });
+			}
+
 			const cardCountEl = cardCountCell.createSpan({ cls: "count" });
 
 			// Name cell

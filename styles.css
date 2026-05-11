@@ -1,11 +1,13 @@
 /* Deck List */
 
 .decklist {
-	padding: 8px;
+    padding: 8px;
+    overflow: visible;
 }
 
 .decklist__section-container {
     position: relative;
+    overflow: visible;
 }
 
 .decklist__section-container table {
@@ -70,10 +72,9 @@ span.comment {
 
 .card-image-container {
     display: none;
-    position: absolute;
-    right: 0;
-    z-index: 1;
+    z-index: 1000;
     pointer-events: auto;
+	margin-right: 50px;
 }
 
 .card-rarity {

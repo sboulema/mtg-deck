@@ -1,44 +1,131 @@
 # MTG Deck
 
-This is a plugin to manage your Magic: The Gathering card collections and decks as Obsidian notes.
+An Obsidian plugin for Magic: The Gathering players. Paste a decklist into a code block and get a richly formatted, interactive deck view — with card previews, mana costs, prices, type grouping, and more.
 
-This is a fork from the original [obsidian-mtg](https://github.com/omardelarosa/obsidian-mtg) plugin which seems unmaintained.
+# ✨ Features
 
-## Decklists
+- **Instant rendering** — card names appear immediately, card data loads in the background
+- **Card previews** — hover over any card to see a preview image
+- **Double-faced card support** — click the preview image to flip between card faces
+- **Mana cost symbols** — displays official mana symbols from Scryfall
+- **Rarity indicators** — colored dot before each card count (black = common, silver = uncommon, gold = rare, orange = mythic)
+- **Type grouping** — cards are automatically sorted and grouped by type (Planeswalker, Creature, Instant, Sorcery, Artifact, Enchantment, Land)
+- **Type summary** — footer shows a count per card type with official card type icons
+- **Card prices** — shows prices in USD, EUR, or TIX via Scryfall
+- **Visual grid view** — toggle between list view and a visual grid of card images per section
+- **Collection tracking** — tracks how many copies you own and highlights missing cards
+- **Buylist** — automatically generates a buylist of missing cards
+- **Multiple decklist formats** — supports standard MTGO, Arena, and Moxfield export formats
+- **Hyperlinked card names** — optionally link card names to their Scryfall page
+- **Section support** — supports multiple sections (Deck, Sideboard, Commander, etc.)
 
-Using the `mtg-deck` syntax hint in any Markdown file, you can define your decklists as follows:
+# 🖼️ Screenshots
 
-```mtgdeck
-4 Delver of Secrets // Insectile Aberration
-4 Haughty Djinn
-3 Tolarian Terror
-4 Consider
-4 Essence Scatter
-4 Fading Hope
-4 Make Disappear # consider Negate instead
-4 Slip Out the Back
-3 Spell Pierce
-3 Thirst for Discovery
-20 Island
-1 Otawara, Soaring City
-1 Otherworldly Gaze
-1 Reckoner Bankbuster
+![](art/deck-list-light.png) ![](art/deck-list-dark.png)
+
+![](art/deck-card-light.png) ![](art/deck-card-dark.png)
+
+![](art/settings.png)
+
+# ⬇️ Installation
+
+This plugin is not yet available in the Obsidian Community Plugin directory. Install it using BRAT (Beta Reviewers Auto-update Tool).
+
+1. Install BRAT from Settings → Community Plugins → Browse, search for BRAT, install and enable it
+2. Open Settings → BRAT and click Add Beta Plugin
+3. Enter the repository URL: https://github.com/sboulema/mtg-deck and click Add Plugin
+4. Enable the plugin under Settings → Community Plugins
+
+BRAT will automatically notify you when updates are available.
+
+# 🤲 Usage
+
+Create a code block with the language set to `mtg-deck`:
+
+````markdown
+```mtg-deck
+Deck:
+4 Ragavan, Nimble Pilferer
+4 Dragon's Rage Channeler
+4 Murktide Regent
+4 Counterspell
+4 Brainstorm
+4 Ponder
+4 Force of Will
+4 Daze
+4 Lightning Bolt
+4 Wasteland
+12 Island
+4 Volcanic Island
+4 Scalding Tarn
 
 Sideboard:
-2 Disdainful Stroke
-4 Negate
-4 Out of the Way
-1 Reckoner Bankbuster
-4 Ertai's Scorn
+2 Pyroblast
+2 Red Elemental Blast
+3 Surgical Extraction
+2 Grafdigger's Cage
+2 Flusterstorm
+4 Back to Basics
+```
+````
+
+## Supported Decklist Formats
+
+**Standard format**:
+```
+4 Lightning Bolt
+4 Ragavan, Nimble Pilferer (MH2) 138
 ```
 
-Which in turn renders as:
+**Headed format**:
+```
+Deck:
+4 Lightning Bolt
 
-![](art/example_decklist.png)
+Sideboard:
+2 Pyroblast
+```
 
-You can also copy paste directly from MTGA exports, though setlists and collector's numbers will not be shown and are not yet supported in the renderer.
+**Arena format**:
+```
+About
+Name My Deck Name
+Deck
+4 Lightning Bolt
+Sideboard
+2 Pyroblast
+```
 
-## Collections
+## Comments
+
+Inline comments can be added with `#`:
+
+```
+4 Otawara, Soaring City # Is this necessary?
+1 Boseiju, Who Endures # Maybe cut?
+```
+
+Full-line comments start with `# `:
+
+```
+# Creatures
+4 Ragavan, Nimble Pilferer
+```
+
+# Settings
+
+Open **Settings → MTG Deck** to configure the plugin:
+
+| Setting | Description |
+|---|---|
+| **Show mana costs** | Display mana cost symbols in a Cost column |
+| **Show card prices** | Display card prices in a Price column |
+| **Preferred currency** | Choose between USD ($), EUR (€), or TIX (Tx) |
+| **Show card previews** | Show card image on hover |
+| **Show card names as hyperlinks** | Link card names to their Scryfall page |
+| **Show buylist** | Show a buylist section for missing cards |
+
+# Collection Tracking
 
 This plugin expects your collection to be stored as csv files with the extension `.mtg.collection.csv` by default.  This extension is configurable in settings:
 
@@ -46,7 +133,7 @@ This plugin expects your collection to be stored as csv files with the extension
 
 These files are expected to be properly formed CSVs such as those generated by tools like [Deckbox](https://deckbox.org/)
 
-### Example CSV Files
+## Example CSV Files
 
 ```
 Name,Count,Set
@@ -65,6 +152,8 @@ Ledger Shredder,5,SNC
 
 Note that your collection will consist of the merged result of all of your CSV files.
 
-# Contributing
+# Credits
 
-See [the official Obsidian plugin guidelines](https://github.com/obsidianmd/obsidian-sample-plugin#obsidian-sample-plugin)
+Built with the [Obsidian Plugin API](https://github.com/obsidianmd/obsidian-api) and [Scryfall API](https://scryfall.com/docs/api).
+
+This is a fork from the original [obsidian-mtg](https://github.com/omardelarosa/obsidian-mtg) plugin which seems unmaintained.
