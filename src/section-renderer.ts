@@ -10,15 +10,15 @@ import { sanitizeHTMLToDom } from "obsidian";
 import { validateDecklist } from "./validator";
 
 export interface SectionRenderContext {
-	section: string;
-	lines: Line[];
-	cardDataByCardId: Record<string, CardData>;
-	hasCardInfo: boolean;
-	settings: ObsidianPluginMtgSettings;
-	missingCardCounts: CardCounts;
-	sectionTotalCounts: Record<string, number>;
-	sectionTotalCost: Record<string, number>;
-	format: string | null;
+    section: string;
+    lines: Line[];
+    cardDataByCardId: Record<string, CardData>;
+    hasCardInfo: boolean;
+    settings: ObsidianPluginMtgSettings;
+    missingCardCounts: CardCounts;
+    sectionTotalCounts: Record<string, number>;
+    sectionTotalCost: Record<string, number>;
+    format: string | null;
 }
 
 export const renderSection = (

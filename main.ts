@@ -9,6 +9,7 @@ import {
 import { renderDecklist } from "src/renderer";
 import { ObsidianPluginMtgSettings } from "src/settings";
 import { CardCounts } from "src/collection";
+import { FORMATS } from "src/validator";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
@@ -27,31 +28,6 @@ const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 		showCardRarities: true,
 	},
 };
-
-const formats = [
-	"standard",
-	"future",
-	"historic",
-	"timeless",
-	"gladiator",
-	"pioneer",
-	"modern",
-	"legacy",
-	"pauper",
-	"vintage",
-	"penny",
-	"commander",
-	"oathbreaker",
-	"standardbrawl",
-	"brawl",
-	"alchemy",
-	"paupercommander",
-	"duel",
-	"oldschool",
-	"premodern",
-	"predh",
-	"tlr"
-];
 
 export default class ObsidianPluginMtg extends Plugin {
 	settings: ObsidianPluginMtgSettings;
@@ -86,9 +62,9 @@ export default class ObsidianPluginMtg extends Plugin {
 			await this.renderDecklist(vault, source, el, null);
 		});
 
-		formats.forEach(format => {
-			this.registerMarkdownCodeBlockProcessor(`mtg-deck-${format}`, async (source: string, el: HTMLElement, ctx) => {
-				await this.renderDecklist(vault, source, el, format);
+		FORMATS.forEach(({ name }) => {
+			this.registerMarkdownCodeBlockProcessor(`mtg-deck-${name}`, async (source: string, el: HTMLElement, ctx) => {
+				await this.renderDecklist(vault, source, el, name);
 			});
 		});
 	}
