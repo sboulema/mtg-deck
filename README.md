@@ -125,7 +125,11 @@ To validate a decklist against a [format](https://scryfall.com/docs/syntax#legal
 ```
 ````
 
-Illegal or banned cards are shown in the section footer with a warning message.
+The following rules are validated in the section footer:
+
+- **Card legality** — flags banned and not legal cards
+- **Deck size** — flags when the deck is too small or too large for the format
+- **Sideboard size** — flags when the sideboard exceeds the maximum for the format
 
 # ⚙️ Settings
 

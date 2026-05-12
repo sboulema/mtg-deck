@@ -57,7 +57,8 @@
 
 .decklist__validation-error--banned,
 .decklist__validation-error--not_legal,
-.decklist__validation-error--deck_size {
+.decklist__validation-error--deck_size,
+.decklist__validation-error--sideboard_size {
     color: #a33;
 }
 

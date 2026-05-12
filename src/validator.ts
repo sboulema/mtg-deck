@@ -127,3 +127,25 @@ export const validateDecklist = (
 
     return { format, errors };
 };
+
+export const validateSideboardSize = (
+    lines: Line[],
+    format: string
+): ValidationError[] => {
+    const formatDef = FORMATS.find(f => f.name === format.toLowerCase());
+    if (!formatDef?.maxSideboardSize) return [];
+
+    const sideboardSize = lines
+        .filter(line => line.lineType === "card")
+        .reduce((acc, line) => acc + (line.cardCount ?? 0), 0);
+
+    if (sideboardSize > formatDef.maxSideboardSize) {
+        return [{
+            type: "sideboard_size",
+            message: `Sideboard has ${sideboardSize} cards, maximum is ${formatDef.maxSideboardSize} for ${format}`,
+            cardName: "",
+        }];
+    }
+
+    return [];
+};

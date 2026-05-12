@@ -7,7 +7,7 @@ import { cardTypeIcons, cardTypeOrder, getTypeCounts, getTypeOrder, sortLines } 
 import { setupCardPreview } from "./card-preview";
 import { buildCardGrid, setupGridToggle } from "./card-grid";
 import { sanitizeHTMLToDom } from "obsidian";
-import { validateDecklist } from "./validator";
+import { validateDecklist, validateSideboardSize } from "./validator";
 
 export interface SectionRenderContext {
     section: string;
@@ -325,16 +325,18 @@ export const renderSection = (
 
 	// Validation errors in footer
 	if (format) {
-		const validation = validateDecklist(sortedLines, cardDataByCardId, format);
+		const errors = section.toLowerCase() === "sideboard"
+			? validateSideboardSize(sortedLines, format)
+			: validateDecklist(sortedLines, cardDataByCardId, format).errors;
 
-		if (validation.errors.length > 0) {
+		if (errors.length > 0) {
 			const validationRow = sectionListFoot.createEl("tr");
 			const validationCell = validationRow.createEl("td", {
 				attr: { colspan: "4" },
-				cls: "decklist__validation-errors"
+				cls: "decklist__validation-errors",
 			});
 
-			validation.errors.forEach(error => {
+			errors.forEach(error => {
 				validationCell.createDiv({
 					cls: `decklist__validation-error decklist__validation-error--${error.type}`,
 					text: `⚠ ${error.message}`,
