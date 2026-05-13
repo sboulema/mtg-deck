@@ -90,17 +90,19 @@ span.comment {
 .card-image-container {
     display: none;
     position: fixed;
-    right: 50px;
+    margin-left: 50px;
     width: 200px;
     z-index: 1000;
     pointer-events: auto;
 }
 
 /* Prevent card preview from being clipped in edit mode */
-.markdown-source-view.mod-cm6
-	.cm-preview-code-block:has(> .block-language-mtg-deck) {
-	overflow: visible;
-	contain: initial !important;
+/* !important is needed to override Obsidian's own !important declarations */
+.markdown-source-view.mod-cm6 .cm-content > [contenteditable=false] [class^="block-language-mtg-deck"],
+.markdown-source-view.mod-cm6 .cm-content > [contenteditable=false] .cm-preview-code-block,
+.markdown-source-view.mod-cm6 .cm-preview-code-block.cm-embed-block.markdown-rendered[class*="cm-lang-mtg-deck"] {
+    contain: initial !important;
+    overflow: visible;
 }
 
 .card-rarity {

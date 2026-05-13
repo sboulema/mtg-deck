@@ -56,9 +56,19 @@ export const buildCardGrid = (
                 imgEl.src = largeImgUri;
             });
 
-            cardEl.addEventListener("mouseleave", () => {
-                imgElContainer.setCssProps({display: "none"});
-                imgEl.src = "";
+            cardEl.addEventListener("mouseleave", (e) => {
+                if (!imgElContainer.contains(e.relatedTarget as Node) &&
+                    e.relatedTarget !== imgElContainer) {
+                    imgElContainer.setCssProps({ display: "none" });
+                    imgEl.src = "";
+                }
+            });
+
+            imgElContainer.addEventListener("mouseleave", (e) => {
+                if (!cardGrid.contains(e.relatedTarget as Node)) {
+                    imgElContainer.setCssProps({ display: "none" });
+                    imgEl.src = "";
+                }
             });
         });
 
