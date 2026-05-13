@@ -32,9 +32,7 @@ export const createCardCountsMapping = (
 
     const recordsList: Record<string, string>[][] = fileContents.map(
         (fileContent) => {
-            const records = parseCsvFile(fileContent, {
-                skip_empty_lines: true,
-            });
+            const records = parseCsvFile(fileContent);
             return records;
         }
     );
