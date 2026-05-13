@@ -15,9 +15,10 @@
 	border: var(--table-border-width) solid var(--table-border-color);
 }
 
-.decklist__section-container:where(th, td):not(.max) {
-  width: 0;
-  white-space: nowrap !important;
+/* A table column without .max should be a narrow column but it should not spread content over multiple lines */
+.decklist .decklist__section-container :where(th, td):not(.max) {
+    width: 0;
+    white-space: nowrap;
 }
 
 .decklist th,
@@ -51,8 +52,8 @@
 
 /* Deck format validation */
 
-.decklist__validation-errors {
-    border-top: var(--table-border-width) solid var(--table-border-color) !important;
+.decklist tfoot.decklist__section-totals td.decklist__validation-errors {
+    border-top: var(--table-border-width) solid var(--table-border-color);
 }
 
 .decklist__validation-error--banned,
