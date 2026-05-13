@@ -67,7 +67,6 @@ export const parseCsvCells = (str: string): string[][] => {
 
 export const parseCsvFile = (
 	fileContent: string,
-	opts?: { skip_empty_lines?: boolean }
 ): Record<string, string>[] => {
 	// Assumes that there is a columns header
 	const lines = fileContent.split("\n");

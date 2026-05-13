@@ -16,16 +16,6 @@ export const setupCardPreview = (
 
 	let faceIndex = 0;
 
-	const getImgUri = (
-		info: CardData,
-		index: number
-	): string | undefined => {
-		if (info.image_uris) {
-			return info.image_uris.large;
-		}
-		return info.card_faces?.[index]?.image_uris?.large;
-	};
-
 	lineEl.addEventListener("mouseenter", () => {
 		const cardInfo = cardDataByCardId[cardId];
 		if (!cardInfo) return;
@@ -40,12 +30,14 @@ export const setupCardPreview = (
 		};
 
 		const rect = lineEl.getBoundingClientRect();
-		imgElContainer.style.display = "block";
-		imgElContainer.style.position = "fixed";
-		imgElContainer.style.top = `${rect.top}px`;
-		imgElContainer.style.right = `${window.innerWidth - rect.right}px`;
-		imgElContainer.style.left = "auto";
-		imgElContainer.style.zIndex = "1000";
+		imgElContainer.setCssProps({
+			display: "block",
+			position: "fixed",
+			top: `${rect.top}px`,
+			right: `${window.innerWidth - rect.right}px`,
+			left: "auto",
+			zIndex: "1000",
+		});
 
 		const imgUri = getImgUri(faceIndex);
 		if (imgUri) {
@@ -69,7 +61,7 @@ export const setupCardPreview = (
 
 	lineEl.addEventListener("mouseleave", (e) => {
 		if (!imgElContainer.contains(e.relatedTarget as Node)) {
-			imgElContainer.style.display = "none";
+			imgElContainer.setCssProps({display: "none"});
 			imgEl.src = "";
 			imgEl.onclick = null;
 		}
@@ -77,7 +69,7 @@ export const setupCardPreview = (
 
 	imgElContainer.addEventListener("mouseleave", (e) => {
 		if (!sectionList.contains(e.relatedTarget as Node)) {
-			imgElContainer.style.display = "none";
+			imgElContainer.setCssProps({display: "none"});
 			imgEl.src = "";
 			imgEl.onclick = null;
 		}

@@ -10,7 +10,7 @@ export const buildCardGrid = (
     imgEl: HTMLImageElement
 ): HTMLElement => {
     const cardGrid = container.createDiv({ cls: "decklist__card-grid" });
-    cardGrid.style.display = "none";
+    cardGrid.setCssProps({"display": "none"});
 
     lines
         .filter((line) => line.lineType === "card" && line.cardName)
@@ -45,16 +45,20 @@ export const buildCardGrid = (
             cardEl.addEventListener("mouseenter", () => {
                 if (!largeImgUri) return;
                 const rect = cardEl.getBoundingClientRect();
-                imgElContainer.style.display = "block";
-                imgElContainer.style.position = "fixed";
-                imgElContainer.style.top = `${rect.top}px`;
-                imgElContainer.style.right = `${window.innerWidth - rect.left + 8}px`;
-                imgElContainer.style.left = "auto";
+
+                imgElContainer.setCssProps({
+                    display: "block",
+                    position: "fixed",
+                    top: `${rect.top}px`,
+                    right: `${window.innerWidth - rect.left + 8}px`,
+                    left: "auto",
+                });
+
                 imgEl.src = largeImgUri;
             });
 
             cardEl.addEventListener("mouseleave", () => {
-                imgElContainer.style.display = "none";
+                imgElContainer.setCssProps({display: "none"});
                 imgEl.src = "";
             });
         });
@@ -69,8 +73,8 @@ export const setupGridToggle = (
 ): void => {
 	toggleBtn.addEventListener("click", () => {
 		const isGridVisible = cardGrid.style.display !== "none";
-		cardGrid.style.display = isGridVisible ? "none" : "flex";
-		sectionList.style.display = isGridVisible ? "" : "none";
-		toggleBtn.textContent = isGridVisible ? "Visual View" : "List View";
+        cardGrid.setCssProps({display: isGridVisible ? "none" : "flex"});
+        sectionList.setCssProps({display: isGridVisible ? "" : "none"});
+        toggleBtn.textContent = isGridVisible ? "Visual View" : "List View";
 	});
 };

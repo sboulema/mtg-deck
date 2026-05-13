@@ -54,7 +54,7 @@ export const renderSection = (
 	});
 
 	const hasCards = lines.some(line => line.lineType === "card" && line.cardName);
-	toggleViewBtn.style.display = hasCards ? "" : "none";
+	toggleViewBtn.setCssProps({"display": hasCards ? "" : "none"});
 
 	// Card preview image container
 	const imgElContainer = sectionContainer.createDiv({
@@ -127,7 +127,7 @@ export const renderSection = (
 			// Name cell
 			const cardNameCell = lineEl.createEl("td");
 			const cardNameEl = cardNameCell.createSpan({ cls: "card-name" });
-			const cardCommentsEl = cardNameCell.createSpan({
+			cardNameCell.createSpan({
 				cls: "comment",
 				text: line.comments?.join("#") || "",
 			});

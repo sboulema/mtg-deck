@@ -1,6 +1,6 @@
 {
 	"name": "mtg-deck",
-	"version": "1.11.66",
+	"version": "1.11.68",
 	"description": "Display your MTG decks and card lists in your notes.",
 	"main": "main.js",
 	"scripts": {

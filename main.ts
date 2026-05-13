@@ -58,12 +58,12 @@ export default class ObsidianPluginMtg extends Plugin {
 			this.cardCounts = await syncCounts(vault, this.settings);
 		});
 
-		this.registerMarkdownCodeBlockProcessor("mtg-deck", async (source: string, el: HTMLElement, ctx) => {
+		this.registerMarkdownCodeBlockProcessor("mtg-deck", async (source: string, el: HTMLElement) => {
 			await this.renderDecklist(vault, source, el, null);
 		});
 
 		FORMATS.forEach(({ name }) => {
-			this.registerMarkdownCodeBlockProcessor(`mtg-deck-${name}`, async (source: string, el: HTMLElement, ctx) => {
+			this.registerMarkdownCodeBlockProcessor(`mtg-deck-${name}`, async (source: string, el: HTMLElement) => {
 				await this.renderDecklist(vault, source, el, name);
 			});
 		});

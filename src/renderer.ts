@@ -1,5 +1,5 @@
-import { CardCounts, nameToId, UNKNOWN_CARD } from "./collection";
-import { CardIdentifier, CardData, fetchCardDataFromScryfall } from "./scryfall";
+import { CardCounts, UNKNOWN_CARD } from "./collection";
+import { CardData, fetchCardDataFromScryfall } from "./scryfall";
 import { ObsidianPluginMtgSettings } from "./settings";
 import { DEFAULT_SECTION_NAME, SKIP_SECTION_NAMES, Line } from "./types";
 import { parseLines, buildDistinctCardList } from "./parser";
