@@ -7,7 +7,7 @@ import { cardTypeIcons, cardTypeOrder, getTypeCounts, getTypeOrder, sortLines } 
 import { setupCardPreview } from "./card-preview";
 import { buildCardGrid, setupGridToggle } from "./card-grid";
 import { sanitizeHTMLToDom } from "obsidian";
-import { validateDecklist, validateSideboardSize } from "./validator";
+import { validateDecklist, validateSideboard } from "./validator";
 
 export interface SectionRenderContext {
     section: string;
@@ -328,7 +328,7 @@ export const renderSection = (
 	// Validation errors in footer
 	if (format) {
 		const errors = section.toLowerCase() === "sideboard"
-			? validateSideboardSize(sortedLines, format)
+			? validateSideboard(sortedLines, cardDataByCardId, format).errors
 			: validateDecklist(sortedLines, cardDataByCardId, format).errors;
 
 		if (errors.length > 0) {

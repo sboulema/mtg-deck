@@ -102,6 +102,7 @@ export interface CardData {
     full_art?: boolean;
     textless?: boolean;
     booster?: boolean;
+    oracle_text?: string;
     image_uris?: {
         art_crop?: string;
         border_crop?: string;

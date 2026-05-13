@@ -134,9 +134,10 @@ To validate a decklist against a [format](https://scryfall.com/docs/syntax#legal
 
 The following rules are validated in the section footer:
 
-- **Card legality** — flags banned and not legal cards
+- **Card legality** — flags banned/not legal/restricted cards
 - **Deck size** — flags when the deck is too small or too large for the format
 - **Sideboard size** — flags when the sideboard exceeds the maximum for the format
+- **Number of copies** - flags when a card is included more than the allowed times (4/1), handles cards like Hare Apparent!
 
 # ⚙️ Settings
 

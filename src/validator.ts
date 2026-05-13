@@ -2,12 +2,12 @@ import { nameToId } from "./collection";
 import { CardData } from "./scryfall";
 import { Line } from "./types";
 
-export type ValidationErrorType = "banned" | "not_legal" | "restricted" | "deck_size" | "sideboard_size";
+export type ValidationErrorType = "banned" | "not_legal" | "restricted" | "deck_size" | "sideboard_size" | "max_copies";
 
 export interface ValidationError {
     type: ValidationErrorType;
     message: string;
-    cardName: string;
+    cardName?: string;
 }
 
 export interface ValidationResult {
@@ -20,31 +20,32 @@ export interface FormatDefinition {
     minDeckSize: number;
     maxDeckSize?: number;
     maxSideboardSize?: number;
+    maxCopies: number;
 }
 
 export const FORMATS: FormatDefinition[] = [
-    { name: "standard",        minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "future",          minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "historic",        minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "timeless",        minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "gladiator",       minDeckSize: 100, maxDeckSize: 100      },
-    { name: "pioneer",         minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "modern",          minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "legacy",          minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "pauper",          minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "vintage",         minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "penny",           minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "commander",       minDeckSize: 100, maxDeckSize: 100      },
-    { name: "oathbreaker",     minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "standardbrawl",   minDeckSize: 60                         },
-    { name: "brawl",           minDeckSize: 60                         },
-    { name: "alchemy",         minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "paupercommander", minDeckSize: 100, maxDeckSize: 100      },
-    { name: "duel",            minDeckSize: 100, maxDeckSize: 100      },
-    { name: "oldschool",       minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "premodern",       minDeckSize: 60,  maxSideboardSize: 15 },
-    { name: "predh",           minDeckSize: 100, maxDeckSize: 100      },
-    { name: "tlr",             minDeckSize: 60,  maxSideboardSize: 15 },
+    { name: "standard",        minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "future",          minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "historic",        minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "timeless",        minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "gladiator",       minDeckSize: 100, maxDeckSize: 100,     maxCopies: 1 },
+    { name: "pioneer",         minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "modern",          minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "legacy",          minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "pauper",          minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "vintage",         minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "penny",           minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "commander",       minDeckSize: 100, maxDeckSize: 100,     maxCopies: 1 },
+    { name: "oathbreaker",     minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 1 },
+    { name: "standardbrawl",   minDeckSize: 60,                        maxCopies: 1 },
+    { name: "brawl",           minDeckSize: 60,                        maxCopies: 1 },
+    { name: "alchemy",         minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "paupercommander", minDeckSize: 100, maxDeckSize: 100,     maxCopies: 1 },
+    { name: "duel",            minDeckSize: 100, maxDeckSize: 100,     maxCopies: 1 },
+    { name: "oldschool",       minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "premodern",       minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
+    { name: "predh",           minDeckSize: 100, maxDeckSize: 100,     maxCopies: 1 },
+    { name: "tlr",             minDeckSize: 60,  maxSideboardSize: 15, maxCopies: 4 },
 ];
 
 const validateDeckSize = (lines: Line[], format: string): ValidationError[] => {
@@ -123,6 +124,20 @@ export const validateDecklist = (
                 return getLegalityErrors(line.cardName!, line.cardCount ?? 0, cardInfo, format);
             }),
         ...validateDeckSize(lines, format),
+        ...validateMaxCopies(lines, cardDataByCardId, format),
+    ];
+
+    return { format, errors };
+};
+
+export const validateSideboard = (
+    lines: Line[],
+    cardDataByCardId: Record<string, CardData>,
+    format: string
+): ValidationResult => {
+    const errors = [
+        ...validateSideboardSize(lines, format),
+        ...validateMaxCopies(lines, cardDataByCardId, format),
     ];
 
     return { format, errors };
@@ -148,4 +163,48 @@ export const validateSideboardSize = (
     }
 
     return [];
+};
+
+const isBasicLand = (cardInfo: CardData): boolean =>
+    cardInfo?.type_line?.includes("Basic Land") ?? false;
+
+const isUnlimitedCopies = (cardInfo: CardData): boolean => {
+    const oracleText = cardInfo?.oracle_text
+        ?? cardInfo?.card_faces?.[0]?.oracle_text
+        ?? "";
+    return oracleText.includes("A deck can have any number of cards named");
+};
+
+const validateMaxCopies = (
+    lines: Line[],
+    cardDataByCardId: Record<string, CardData>,
+    format: string
+): ValidationError[] => {
+    const formatDef = FORMATS.find(f => f.name === format.toLowerCase());
+    if (!formatDef) return [];
+
+    const cardCounts: Record<string, number> = {};
+
+    return lines
+        .filter(line => line.lineType === "card" && line.cardName)
+        .flatMap(line => {
+            const cardId = nameToId(line.cardName);
+            const cardInfo = cardDataByCardId[cardId];
+
+            if (!cardInfo || isBasicLand(cardInfo) || isUnlimitedCopies(cardInfo)) {
+                return [];
+            }
+
+            cardCounts[cardId] = (cardCounts[cardId] ?? 0) + (line.cardCount ?? 0);
+
+            if (cardCounts[cardId] > formatDef.maxCopies) {
+                return [{
+                    type: "max_copies" as ValidationErrorType,
+                    message: `${line.cardName} has ${cardCounts[cardId]} copies, maximum is ${formatDef.maxCopies} for ${format}`,
+                    cardName: line.cardName,
+                }];
+            }
+
+            return [];
+        });
 };
