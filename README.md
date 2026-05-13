@@ -30,14 +30,21 @@ An Obsidian plugin for Magic: The Gathering players. Paste a decklist into a cod
 
 # ⬇️ Installation
 
-This plugin is not yet available in the Obsidian Community Plugin directory. Install it using [BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewers Auto-update Tool).
+## Obsidian Community Plugin Directory
+
+1. Open Obsidian and go to **Settings → Community Plugins**
+2. Click **Browse** and search for `MTG Deck`
+3. Click **Install**, then **Enable**
+
+You can also install it directly from the [Obsidian Community Plugin](https://community.obsidian.md/plugins/mtg-deck) page.
+
+## BRAT (Beta)
+To get the latest beta version, install using [BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewers Auto-update Tool).
 
 1. Install BRAT from **Settings → Community Plugins → Browse**, search for `BRAT`, install and enable it
 2. Open **Settings → BRAT** and click **Add Beta Plugin**
 3. Enter the repository URL: `https://github.com/sboulema/mtg-deck` and click **Add Plugin**
 4. Enable the plugin under **Settings → Community Plugins**
-
-BRAT will automatically notify you when updates are available.
 
 # 🤲 Usage
 

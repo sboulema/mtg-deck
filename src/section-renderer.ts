@@ -41,20 +41,13 @@ export const renderSection = (
 		cls: "decklist__section-container",
 	});
 
-	// Heading container with toggle button
+	// Heading container
 	const sectionHeadingContainer = sectionContainer.createDiv({
 		cls: "decklist__section-heading-container",
 	});
 	const sectionHeadingEl = sectionHeadingContainer.createEl("h3", {
 		cls: "decklist__section-heading",
 	});
-	const toggleViewBtn = sectionHeadingContainer.createEl("button", {
-		text: "Visual View",
-		cls: "decklist__toggle-view",
-	});
-
-	const hasCards = lines.some(line => line.lineType === "card" && line.cardName);
-	toggleViewBtn.setCssProps({"display": hasCards ? "" : "none"});
 
 	// Card preview image container
 	const imgElContainer = sectionContainer.createDiv({
@@ -96,7 +89,16 @@ export const renderSection = (
 		imgElContainer,
 		imgEl
 	);
-	setupGridToggle(toggleViewBtn, cardGrid, sectionList);
+
+	// Add button to toggle between list and visual view if there are cards in this section
+	const hasCards = lines.some(line => line.lineType === "card" && line.cardName);
+	if (hasCards) {
+		const toggleViewBtn = sectionHeadingContainer.createEl("button", {
+			text: "Visual View",
+			cls: "decklist__toggle-view",
+		});
+		setupGridToggle(toggleViewBtn, cardGrid, sectionList);
+	}
 
 	// Sort and render lines
 	const sortedLines = sortLines(lines, cardDataByCardId);
@@ -106,7 +108,7 @@ export const renderSection = (
 		const lineEl = sectionListBody.createEl("tr");
 
 		if (line.lineType === "card") {
-			const cardId = nameToId(line.cardName!);
+			const cardId = nameToId(line.cardName);
 			const cardInfo = cardDataByCardId[cardId];
 			const currentTypeOrder = getTypeOrder(line, cardDataByCardId);
 

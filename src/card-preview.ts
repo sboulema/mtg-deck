@@ -45,7 +45,7 @@ export const setupCardPreview = (
 		}
 
 		if (isDoubleFaced) {
-			imgEl.style.cursor = "pointer";
+			imgEl.setCssProps({cursor: "pointer"});
 			imgEl.onclick = () => {
 				faceIndex = faceIndex === 0 ? 1 : 0;
 				const uri = getImgUri(faceIndex);
@@ -54,7 +54,7 @@ export const setupCardPreview = (
 				}
 			};
 		} else {
-			imgEl.style.cursor = "default";
+			imgEl.setCssProps({cursor: "default"});
 			imgEl.onclick = null;
 		}
 	});

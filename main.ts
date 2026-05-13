@@ -75,8 +75,8 @@ export default class ObsidianPluginMtg extends Plugin {
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+			await this.loadData() as Partial<ObsidianPluginMtgSettings>
+		) as ObsidianPluginMtgSettings;
 	}
 
 	async saveSettings() {

@@ -10,12 +10,11 @@ export const buildCardGrid = (
     imgEl: HTMLImageElement
 ): HTMLElement => {
     const cardGrid = container.createDiv({ cls: "decklist__card-grid" });
-    cardGrid.setCssProps({"display": "none"});
 
     lines
         .filter((line) => line.lineType === "card" && line.cardName)
         .forEach((line) => {
-            const cardId = nameToId(line.cardName!);
+            const cardId = nameToId(line.cardName);
             const cardInfo = cardDataByCardId[cardId];
             const imgUri = cardInfo?.image_uris?.normal
                 ?? cardInfo?.card_faces?.[0]?.image_uris?.normal;
@@ -36,7 +35,7 @@ export const buildCardGrid = (
             });
 
             if (cardInfo?.scryfall_uri) {
-                cardEl.style.cursor = "pointer";
+                cardEl.setCssProps({cursor: "pointer"});
                 cardEl.addEventListener("click", () => {
                     window.open(cardInfo.scryfall_uri, "_blank");
                 });
@@ -72,7 +71,7 @@ export const setupGridToggle = (
 	sectionList: HTMLElement
 ): void => {
 	toggleBtn.addEventListener("click", () => {
-		const isGridVisible = cardGrid.style.display !== "none";
+		const isGridVisible = cardGrid.style.display === "flex";
         cardGrid.setCssProps({display: isGridVisible ? "none" : "flex"});
         sectionList.setCssProps({display: isGridVisible ? "" : "none"});
         toggleBtn.textContent = isGridVisible ? "Visual View" : "List View";

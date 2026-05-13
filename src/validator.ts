@@ -117,7 +117,7 @@ export const validateDecklist = (
         ...lines
             .filter(line => line.lineType === "card" && line.cardName)
             .flatMap(line => {
-                const cardId = nameToId(line.cardName!);
+                const cardId = nameToId(line.cardName);
                 const cardInfo = cardDataByCardId[cardId];
                 if (!cardInfo) return [];
                 return getLegalityErrors(line.cardName!, line.cardCount ?? 0, cardInfo, format);
