@@ -59,7 +59,7 @@
 .decklist__validation-error--not_legal,
 .decklist__validation-error--deck_size,
 .decklist__validation-error--sideboard_size {
-    color: #a33;
+    color: #aa3333;
 }
 
 .decklist__validation-error--restricted {
@@ -75,7 +75,7 @@
 }
 
 .card-image {
-	height: 400px;
+    border-radius: 8px;
 }
 
 span.card-name {
@@ -83,15 +83,24 @@ span.card-name {
 }
 
 span.comment {
-	color: #999;
+	color: #999999;
 	font-style: italic;
 }
 
 .card-image-container {
     display: none;
+    position: fixed;
+    right: 50px;
+    width: 200px;
     z-index: 1000;
     pointer-events: auto;
-	margin-right: 50px;
+}
+
+/* Prevent card preview from being clipped in edit mode */
+.markdown-source-view.mod-cm6
+	.cm-preview-code-block:has(> .block-language-mtg-deck) {
+	overflow: visible;
+	contain: initial !important;
 }
 
 .card-rarity {
@@ -128,12 +137,12 @@ span.comment {
 }
 
 .insufficient-count {
-	color: #666;
+	color: #666666;
 	font-style: italic;
 }
 
 .error {
-	color: #a33;
+	color: #aa3333;
 	font-style: italic;
 }
 
@@ -213,10 +222,4 @@ span.comment {
     padding: 2px 6px;
     font-size: 0.85em;
     font-weight: bold;
-}
-
-.markdown-source-view.mod-cm6
-	.cm-preview-code-block:has(> .block-language-mtg-deck) {
-	overflow: visible;
-	contain: initial !important;
 }

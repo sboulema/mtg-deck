@@ -16,48 +16,47 @@ export const setupCardPreview = (
 
 	let faceIndex = 0;
 
-	lineEl.addEventListener("mouseenter", () => {
-		const cardInfo = cardDataByCardId[cardId];
-		if (!cardInfo) return;
+lineEl.addEventListener("mouseenter", () => {
+    const cardInfo = cardDataByCardId[cardId];
+    if (!cardInfo) return;
 
-		faceIndex = 0;
+    faceIndex = 0;
 
-		const getImgUri = (index: number): string | undefined => {
-			if (cardInfo.image_uris) {
-				return cardInfo.image_uris.large;
-			}
-			return cardInfo.card_faces?.[index]?.image_uris?.large;
-		};
+    const getImgUri = (index: number): string | undefined => {
+        if (cardInfo.image_uris) {
+            return cardInfo.image_uris.large;
+        }
+        return cardInfo.card_faces?.[index]?.image_uris?.large;
+    };
 
-		const rect = lineEl.getBoundingClientRect();
-		imgElContainer.setCssProps({
-			display: "block",
-			position: "fixed",
-			top: `${rect.top}px`,
-			right: `${window.innerWidth - rect.right}px`,
-			left: "auto",
-			zIndex: "1000",
-		});
+	const lineRect = lineEl.getBoundingClientRect();
+	const containerRect = imgElContainer.parentElement?.getBoundingClientRect();
+	const top = lineRect.top - (containerRect?.top ?? 0);
 
-		const imgUri = getImgUri(faceIndex);
-		if (imgUri) {
-			imgEl.src = imgUri;
-		}
-
-		if (isDoubleFaced) {
-			imgEl.setCssProps({cursor: "pointer"});
-			imgEl.onclick = () => {
-				faceIndex = faceIndex === 0 ? 1 : 0;
-				const uri = getImgUri(faceIndex);
-				if (uri) {
-					imgEl.src = uri;
-				}
-			};
-		} else {
-			imgEl.setCssProps({cursor: "default"});
-			imgEl.onclick = null;
-		}
+	imgElContainer.setCssProps({
+		display: "block",
+		top: `${top}px`
 	});
+
+    const imgUri = getImgUri(faceIndex);
+    if (imgUri) {
+        imgEl.src = imgUri;
+    }
+
+    if (isDoubleFaced) {
+        imgEl.addClass("card-image--clickable");
+        imgEl.onclick = () => {
+            faceIndex = faceIndex === 0 ? 1 : 0;
+            const uri = getImgUri(faceIndex);
+            if (uri) {
+                imgEl.src = uri;
+            }
+        };
+    } else {
+        imgEl.removeClass("card-image--clickable");
+        imgEl.onclick = null;
+    }
+});
 
 	lineEl.addEventListener("mouseleave", (e) => {
 		if (!imgElContainer.contains(e.relatedTarget as Node)) {

@@ -43,14 +43,14 @@ export const buildCardGrid = (
 
             cardEl.addEventListener("mouseenter", () => {
                 if (!largeImgUri) return;
-                const rect = cardEl.getBoundingClientRect();
+
+                const lineRect = cardEl.getBoundingClientRect();
+                const containerRect = imgElContainer.parentElement?.getBoundingClientRect();
+                const top = lineRect.top - (containerRect?.top ?? 0);
 
                 imgElContainer.setCssProps({
                     display: "block",
-                    position: "fixed",
-                    top: `${rect.top}px`,
-                    right: `${window.innerWidth - rect.left + 8}px`,
-                    left: "auto",
+                    top: `${top}px`,
                 });
 
                 imgEl.src = largeImgUri;
