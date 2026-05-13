@@ -17,6 +17,10 @@ jobs:
   build:
     name: 🛠️ Build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -30,6 +34,13 @@ jobs:
         run: |
           npm install
           npm run build
+
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            main.js
+            styles.css
 
       - name: Publish Build Artifacts
         uses: actions/upload-artifact@v7
