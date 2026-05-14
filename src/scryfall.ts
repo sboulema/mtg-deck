@@ -148,17 +148,6 @@ export interface ScryfallResponse {
     total_cards: number;
 }
 
-export const getCardData = async (
-    cardName: string,
-    request = promiseWrappedRequest
-): Promise<ScryfallResponse> => {
-    const query = new URLSearchParams({ q: cardName }).toString();
-    const params: RequestOptions = {
-        url: `https://api.scryfall.com/cards/search?${query}`,
-    };
-    return request(params);
-};
-
 export const getMultipleCardData = async (
     cardIdentifiers: CardIdentifier[],
     request = promiseWrappedRequest

@@ -60,7 +60,9 @@
 .decklist__validation-error--not_legal,
 .decklist__validation-error--deck_size,
 .decklist__validation-error--sideboard_size,
-.decklist__validation-error--max_copies {
+.decklist__validation-error--max_copies,
+.decklist__validation-error--commander_zone,
+.decklist__validation-error--color_identity {
     color: #aa3333;
 }
 

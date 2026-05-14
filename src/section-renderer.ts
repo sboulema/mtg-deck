@@ -7,11 +7,12 @@ import { cardTypeIcons, cardTypeOrder, getTypeCounts, getTypeOrder, sortLines } 
 import { setupCardPreview } from "./card-preview";
 import { buildCardGrid, setupGridToggle } from "./card-grid";
 import { sanitizeHTMLToDom } from "obsidian";
-import { validateDecklist, validateSideboard } from "./validator";
+import { validateCommanderZone, validateDecklist, validateSideboard } from "./validator";
 
 export interface SectionRenderContext {
     section: string;
     lines: Line[];
+	commanderLines: Line[];
     cardDataByCardId: Record<string, CardData>;
     hasCardInfo: boolean;
     settings: ObsidianPluginMtgSettings;
@@ -28,6 +29,7 @@ export const renderSection = (
 	const {
 		section,
 		lines,
+		commanderLines,
 		cardDataByCardId,
 		hasCardInfo,
 		settings,
@@ -143,17 +145,25 @@ export const renderSection = (
 
 				if (cardManaCost) {
 					cardManaCost
-						.replace(/\//g, "")
-						.split("{")
-						.slice(1)
-						.forEach((part) => {
-							cardCostEl.createEl("img", {
-								attr: {
-									src: `https://svgs.scryfall.io/card-symbols/${part.slice(0, -1)}.svg`,
-									width: 18,
-									height: 18,
-								},
-							});
+						.split("//")
+						.map(part => part.trim())
+						.forEach((part, index) => {
+							if (index > 0) {
+								cardCostEl.createSpan({ text: " // " });
+							}
+							part
+								.replace(/\//g, "")
+								.split("{")
+								.slice(1)
+								.forEach(symbol => {
+									cardCostEl.createEl("img", {
+										attr: {
+											src: `https://svgs.scryfall.io/card-symbols/${symbol.slice(0, -1)}.svg`,
+											width: 18,
+											height: 18,
+										},
+									});
+								});
 						});
 				}
 			}
@@ -327,9 +337,16 @@ export const renderSection = (
 
 	// Validation errors in footer
 	if (format) {
-		const errors = section.toLowerCase() === "sideboard"
-			? validateSideboard(sortedLines, cardDataByCardId, format).errors
-			: validateDecklist(sortedLines, cardDataByCardId, format).errors;
+		const errors = (() => {
+			switch (section.toLowerCase()) {
+				case "sideboard":
+					return validateSideboard(sortedLines, cardDataByCardId, format).errors;
+				case "commander":
+					return validateCommanderZone(sortedLines, cardDataByCardId, format).errors;
+				default:
+					return validateDecklist(sortedLines, commanderLines, cardDataByCardId, format).errors;
+			}
+		})();
 
 		if (errors.length > 0) {
 			const validationRow = sectionListFoot.createEl("tr");

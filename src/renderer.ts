@@ -70,6 +70,7 @@ export const renderDecklist = async (
         const enriched = renderSection(containerEl, {
             section,
             lines: linesBySection[section] ?? [],
+            commanderLines: linesBySection["Commander"] ?? linesBySection["commander"] ?? [],
             cardDataByCardId,
             hasCardInfo,
             settings,

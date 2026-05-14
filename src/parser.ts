@@ -2,7 +2,7 @@ import { CardCounts, nameToId } from "./collection";
 import { CardIdentifier } from "./scryfall";
 import { COMMENT_DELIMITER, Line } from "./types";
 
-const lineMatchRE = /^(\d+)\s+(.*?)(\s+\(([A-Za-z0-9]{3})\)\s+0*(\d+))?$/;
+const lineMatchRE = /^(\d+)x?\s+(.*?)(\s+\(([A-Za-z0-9]{3})\)\s+0*(\d+))?$/;
 const blankLineRE = /^\s+$/;
 const headingMatchRE = new RegExp("^[^[0-9|" + COMMENT_DELIMITER + "]");
 

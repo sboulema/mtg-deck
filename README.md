@@ -138,6 +138,7 @@ The following rules are validated in the section footer:
 - **Deck size** — flags when the deck is too small or too large for the format
 - **Sideboard size** — flags when the sideboard exceeds the maximum for the format
 - **Number of copies** - flags when a card is included more than the allowed times (4/1), handles cards like Hare Apparent!
+- **Commander rules** - flags when a card is not a legal commander, or cards in the deck that or outside of the color identity
 
 # ⚙️ Settings
 
