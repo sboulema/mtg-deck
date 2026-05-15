@@ -31,7 +31,9 @@ lineEl.addEventListener("mouseenter", () => {
 
 	const lineRect = lineEl.getBoundingClientRect();
 	const containerRect = imgElContainer.parentElement?.getBoundingClientRect();
-	const top = lineRect.top + window.scrollY - (containerRect?.top ?? 0);
+	const scrollableParent = imgElContainer.parentElement?.parentElement;
+	const scrollOffset = scrollableParent?.scrollTop ?? 0;
+	const top = lineRect.top - (containerRect?.top ?? 0) + scrollOffset;
 
 	imgElContainer.setCssProps({
 		display: "block",
