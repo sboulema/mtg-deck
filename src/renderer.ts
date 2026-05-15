@@ -71,6 +71,7 @@ export const renderDecklist = async (
             section,
             lines: linesBySection[section] ?? [],
             commanderLines: linesBySection["Commander"] ?? linesBySection["commander"] ?? [],
+            companionLines: linesBySection["Companion"] ?? linesBySection["companion"] ?? [],
             cardDataByCardId,
             hasCardInfo,
             settings,

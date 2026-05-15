@@ -7,12 +7,13 @@ import { cardTypeIcons, cardTypeOrder, getTypeCounts, getTypeOrder, sortLines } 
 import { setupCardPreview } from "./card-preview";
 import { buildCardGrid, setupGridToggle } from "./card-grid";
 import { sanitizeHTMLToDom } from "obsidian";
-import { validateCommanderZone, validateDecklist, validateSideboard } from "./validator";
+import { validateCommanderZone, validateCompanion, validateDecklist, validateSideboard } from "./validator";
 
 export interface SectionRenderContext {
     section: string;
     lines: Line[];
 	commanderLines: Line[];
+	companionLines: Line[];
     cardDataByCardId: Record<string, CardData>;
     hasCardInfo: boolean;
     settings: ObsidianPluginMtgSettings;
@@ -30,6 +31,7 @@ export const renderSection = (
 		section,
 		lines,
 		commanderLines,
+		companionLines,
 		cardDataByCardId,
 		hasCardInfo,
 		settings,
@@ -185,10 +187,10 @@ export const renderSection = (
 				if (settings.decklist.showCardNamesAsHyperlinks && cardInfo?.scryfall_uri) {
 					const cardLinkEl = cardNameEl.createEl("a");
 					cardLinkEl.href = cardInfo.scryfall_uri;
-					cardLinkEl.textContent = cardInfo.name ?? line.cardName;
+					cardLinkEl.textContent = cardInfo?.printed_name ?? cardInfo.name ?? line.cardName;
 				} else {
 					cardNameEl.textContent =
-						cardInfo?.name ?? line.cardName ?? UNKNOWN_CARD;
+						cardInfo?.printed_name ?? cardInfo?.name ?? line.cardName ?? UNKNOWN_CARD;
 				}
 			}
 
@@ -340,9 +342,11 @@ export const renderSection = (
 		const errors = (() => {
 			switch (section.toLowerCase()) {
 				case "sideboard":
-					return validateSideboard(sortedLines, cardDataByCardId, format).errors;
+					return validateSideboard(sortedLines, companionLines, cardDataByCardId, format).errors;
 				case "commander":
 					return validateCommanderZone(sortedLines, cardDataByCardId, format).errors;
+				case "companion":
+					return validateCompanion(sortedLines, cardDataByCardId, format).errors;
 				default:
 					return validateDecklist(sortedLines, commanderLines, cardDataByCardId, format).errors;
 			}

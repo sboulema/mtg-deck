@@ -103,6 +103,7 @@ export interface CardData {
     textless?: boolean;
     booster?: boolean;
     oracle_text?: string;
+    printed_name?: string;
     image_uris?: {
         art_crop?: string;
         border_crop?: string;
@@ -180,6 +181,18 @@ export const getMultipleCardData = async (
     return request(params);
 };
 
+/**
+ * Fetches card data from the Scryfall API for a list of distinct cards.
+ * Cards are fetched in batches of {@link MAX_SCRYFALL_BATCH_SIZE} to respect
+ * Scryfall's API limits. All batches are fetched in parallel.
+ *
+ * The resulting record is indexed by both the card's English name and its
+ * printed (localized) name, allowing lookups to work regardless of which
+ * name was used in the decklist.
+ *
+ * @param distinctCards - List of distinct card identifiers to fetch
+ * @returns A record of card data indexed by normalized card name
+ */
 export const fetchCardDataFromScryfall = async (
 	distinctCards: CardIdentifier[]
 ): Promise<Record<string, CardData>> => {
@@ -209,6 +222,11 @@ export const fetchCardDataFromScryfall = async (
 				const cardId = nameToId(card.name);
 				cardDataByCardId[cardId] = card;
 			}
+
+            if (card.printed_name) {
+                const cardId = nameToId(card.printed_name);
+                cardDataByCardId[cardId] = card;
+            }
 		});
 	});
 

@@ -2,7 +2,7 @@ import { nameToId } from "./collection";
 import { CardData } from "./scryfall";
 import { Line } from "./types";
 
-export type ValidationErrorType = "banned" | "not_legal" | "restricted" | "deck_size" | "sideboard_size" | "max_copies" | "commander_zone" | "color_identity";
+export type ValidationErrorType = "banned" | "not_legal" | "restricted" | "deck_size" | "sideboard_size" | "max_copies" | "commander_zone" | "color_identity" | "companion";
 
 export interface ValidationError {
     type: ValidationErrorType;
@@ -136,12 +136,14 @@ export const validateDecklist = (
 
 export const validateSideboard = (
     lines: Line[],
+    companionLines: Line[],
     cardDataByCardId: Record<string, CardData>,
     format: string
 ): ValidationResult => {
     const errors = [
         ...validateSideboardSize(lines, format),
         ...validateMaxCopies(lines, cardDataByCardId, format),
+        ...validateCompanionInSideboard(lines, companionLines)
     ];
 
     return { format, errors };
@@ -155,6 +157,19 @@ export const validateCommanderZone = (
     const errors = [
         ...validateCommanderZoneSize(lines, format),
         ...validateCommanderZoneType(lines, cardDataByCardId, format),
+    ];
+
+    return { format, errors };
+};
+
+export const validateCompanion = (
+    lines: Line[],
+    cardDataByCardId: Record<string, CardData>,
+    format: string
+): ValidationResult => {
+    const errors = [
+        ...validateCompanionSize(lines),
+        ...validateCompanionType(lines, cardDataByCardId),
     ];
 
     return { format, errors };
@@ -371,6 +386,96 @@ const validateCommanderInDeck = (
                 return [{
                     type: "commander_zone" as ValidationErrorType,
                     message: `${line.cardName} is in the command zone but not in the deck`,
+                    cardName: line.cardName,
+                }];
+            }
+
+            return [];
+        });
+};
+
+/**
+ * Validates that the companion section contains 0 or 1 card.
+ *
+ * @param companionLines - The lines from the Companion section
+ * @param cardDataByCardId - Card data indexed by card id
+ * @returns A list of validation errors
+ */
+export const validateCompanionSize = (
+    companionLines: Line[]
+): ValidationError[] => {
+    const cardLines = companionLines.filter(line => line.lineType === "card" && line.cardName);
+
+    if (cardLines.length === 0) return [];
+
+    const errors: ValidationError[] = [];
+
+    if (cardLines.length > 1) {
+        errors.push({
+            type: "companion",
+            message: `Companion section has ${cardLines.length} cards, maximum is 1`,
+        });
+    }
+
+    return errors;
+};
+
+/**
+ * Validates that the companion card has the Companion keyword.
+ *
+ * @param companionLines - The lines from the Companion section
+ * @param cardDataByCardId - Card data indexed by card id
+ * @returns A list of validation errors
+ */
+export const validateCompanionType = (
+    companionLines: Line[],
+    cardDataByCardId: Record<string, CardData>
+): ValidationError[] => {
+    const cardLines = companionLines.filter(line => line.lineType === "card" && line.cardName);
+
+    if (cardLines.length === 0) return [];
+
+    const errors: ValidationError[] = [];
+
+    cardLines.forEach(line => {
+        const cardId = nameToId(line.cardName!);
+        const cardInfo = cardDataByCardId[cardId];
+
+        if (!cardInfo?.keywords?.includes("Companion")) {
+            errors.push({
+                type: "companion",
+                message: `${line.cardName} does not have the Companion keyword`,
+                cardName: line.cardName,
+            });
+        }
+    });
+
+    return errors;
+};
+
+/**
+ * Validates that the companion is also listed in the sideboard.
+ *
+ * @param companionLines - The lines from the Companion section
+ * @param sideboardLines - The lines from the Sideboard section
+ * @returns A list of validation errors
+ */
+export const validateCompanionInSideboard = (
+    sideboardLines: Line[],
+    companionLines: Line[]
+): ValidationError[] => {
+    return companionLines
+        .filter(line => line.lineType === "card" && line.cardName)
+        .flatMap(line => {
+            const isInSideboard = sideboardLines.some(
+                sideboardLine => sideboardLine.lineType === "card" &&
+                sideboardLine.cardName === line.cardName
+            );
+
+            if (!isInSideboard) {
+                return [{
+                    type: "companion" as ValidationErrorType,
+                    message: `${line.cardName} is listed as companion but not in the sideboard`,
                     cardName: line.cardName,
                 }];
             }

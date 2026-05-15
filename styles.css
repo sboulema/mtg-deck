@@ -62,7 +62,8 @@
 .decklist__validation-error--sideboard_size,
 .decklist__validation-error--max_copies,
 .decklist__validation-error--commander_zone,
-.decklist__validation-error--color_identity {
+.decklist__validation-error--color_identity,
+.decklist__validation-error--companion {
     color: #aa3333;
 }
 
