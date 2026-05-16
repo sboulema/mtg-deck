@@ -67,17 +67,18 @@ export const renderSection = (
 
 	sectionHeadingEl.textContent = section;
 
-	// Table
+	// Table and table headings
 	const sectionList = sectionContainer.createEl("table");
 	const sectionListHead = sectionList.createEl("thead");
 	const sectionListHeadRow = sectionListHead.createEl("tr");
 
 	sectionListHeadRow.createEl("th", { text: "Count" });
-	sectionListHeadRow.createEl("th", { text: "Name", cls: "max" });
+	sectionListHeadRow.createEl("th", { text: "Name" });
 
 	if (settings.decklist.showManaCosts) {
 		sectionListHeadRow.createEl("th", { text: "Cost" });
 	}
+
 	if (settings.decklist.showCardPrices) {
 		sectionListHeadRow.createEl("th", { text: "Price" });
 	}
@@ -145,13 +146,25 @@ export const renderSection = (
 				const cardManaCost =
 					cardInfo?.mana_cost ?? cardInfo?.card_faces?.[0]?.mana_cost;
 
+				const tdPaddingSize =
+					parseInt(window.getComputedStyle(document.body).getPropertyValue('--size-4-2'));
+
 				if (cardManaCost) {
+					const numberOfManaSymbols = (cardManaCost.match(/{/g) || []).length;
+					const numberOfManaCosts = (cardManaCost.match(/\/\//g) || []).length;
+
+					let columnWidth = numberOfManaSymbols * 18;
+					columnWidth += tdPaddingSize * 2;
+					columnWidth += numberOfManaCosts * 18;
+
+					cardCostCell.setCssProps({ width: `${columnWidth}px`});
+
 					cardManaCost
 						.split("//")
 						.map(part => part.trim())
 						.forEach((part, index) => {
 							if (index > 0) {
-								cardCostEl.createSpan({ text: " // " });
+								cardCostEl.createSpan({ cls: "card-cost-divider" });
 							}
 							part
 								.replace(/\//g, "")
