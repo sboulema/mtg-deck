@@ -35,7 +35,7 @@
 		"obsidian": "latest",
 		"prettier": "3.8.3",
 		"prettier-eslint": "^16.4.2",
-		"ts-jest": "^29.4.10",
+		"ts-jest": "^29.4.11",
 		"ts-node": "^10.9.2",
 		"tslib": "2.8.1",
 		"typescript": "^6.0.3"
