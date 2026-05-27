@@ -42,10 +42,9 @@ describe("Collection", () => {
     describe("#createCardCountsMapping", () => {
         const settings: ObsidianPluginMtgSettings = {
             collection: {
-                fileExtension: "mtg.collection.csv",
+                folderPath: "Collections",
                 nameColumn: "Name",
                 countColumn: "Count",
-                syncIntervalMs: 10,
             },
             decklist: {
                 preferredCurrency: "usd",

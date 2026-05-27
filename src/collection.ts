@@ -1,13 +1,12 @@
-import { Vault } from "obsidian";
+import { TFile, Vault } from "obsidian";
 import { parseCsvFile } from "./csv";
 import { ObsidianPluginMtgSettings } from "./settings";
 
 export type CardCounts = Record<string, number>;
 
-export const DEFAULT_COLLECTION_FILE_EXTENSION = "mtg.collection.csv";
+export const DEFAULT_COLLECTION_FOLDER_PATH = "Collections";
 export const DEFAULT_COLLECTION_NAME_COLUMN = "Name";
 export const DEFAULT_COLLECTION_COUNT_COLUMN = "Count";
-export const DEFAULT_COLLECTION_SYNC_INTERVAL = 5000;
 export const UNKNOWN_CARD = "UNKNOWN_CARD";
 
 export const nameToId = (rawName: string | undefined) => {
@@ -57,24 +56,27 @@ export const processCollectionFiles = async (
     vault: Vault,
     settings: ObsidianPluginMtgSettings
 ): Promise<string[]> => {
+    const folder = vault.getFolderByPath(
+        settings.collection.folderPath
+    );
+
+    if (!folder) {
+        return [];
+    }
+
     return (
         (
             await Promise.all(
-                vault
-                    .getFiles()
-                    .filter((f) => {
-                        if (f.extension === "csv") {
-                            return f.name.endsWith(
-                                `${settings.collection.fileExtension}`
-                            );
-                        } else {
-                            return false;
-                        }
-                    })
+                folder.children
+                    .filter(
+                        (file): file is TFile =>
+                            file instanceof TFile &&
+                            file.extension === "csv"
+                    )
                     .map((file) => vault.cachedRead(file).catch(() => ""))
             )
         )
-            // remove any unreadable files
+            // remove unreadable files
             .filter((s) => s.length)
     );
 };

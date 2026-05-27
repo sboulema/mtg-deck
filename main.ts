@@ -1,9 +1,8 @@
-import { App, Plugin, PluginSettingTab, Setting, Vault } from "obsidian";
+import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, TFolder, Vault } from "obsidian";
 import {
 	DEFAULT_COLLECTION_COUNT_COLUMN,
-	DEFAULT_COLLECTION_FILE_EXTENSION,
+	DEFAULT_COLLECTION_FOLDER_PATH,
 	DEFAULT_COLLECTION_NAME_COLUMN,
-	DEFAULT_COLLECTION_SYNC_INTERVAL,
 	syncCounts,
 } from "src/collection";
 import { renderDecklist } from "src/renderer";
@@ -13,10 +12,9 @@ import { FORMATS } from "src/validator";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
-		fileExtension: DEFAULT_COLLECTION_FILE_EXTENSION,
+		folderPath: DEFAULT_COLLECTION_FOLDER_PATH,
 		nameColumn: DEFAULT_COLLECTION_NAME_COLUMN,
 		countColumn: DEFAULT_COLLECTION_COUNT_COLUMN,
-		syncIntervalMs: DEFAULT_COLLECTION_SYNC_INTERVAL,
 	},
 	decklist: {
 		preferredCurrency: "usd",
@@ -43,12 +41,12 @@ export default class ObsidianPluginMtg extends Plugin {
 
 		const { vault } = this.app;
 
-		vault.on("modify", async (f) => {
-			if (f.name.endsWith(".csv")) {
+		vault.on("modify", async (file) => {
+			if (file.name.endsWith(".csv")) {
 				const settings = this.settings;
-				const collectionFileExt =
-					settings.collection?.fileExtension || "";
-				if (f.name.endsWith(collectionFileExt)) {
+				const collectionFolderPath =
+					settings.collection?.folderPath || "";
+				if (file.parent?.path === collectionFolderPath) {
 					this.cardCounts = await syncCounts(vault, settings);
 				}
 			}
@@ -76,7 +74,7 @@ export default class ObsidianPluginMtg extends Plugin {
 			{},
 			DEFAULT_SETTINGS,
 			await this.loadData() as Partial<ObsidianPluginMtgSettings>
-		) as ObsidianPluginMtgSettings;
+		);
 	}
 
 	async saveSettings() {
@@ -126,17 +124,39 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 
 		// Collection CSV setting
 		new Setting(containerEl)
-			.setName("Collection CSV")
-			.setDesc("The file extension of your collection as a CSV file")
-			.addText((text) =>
+			.setName("Collection folder")
+			.setDesc("Folder containing your collection CSV files")
+			.addText((text) => {
 				text
-					.setPlaceholder(".mtg.collection.csv")
-					.setValue(this.plugin.settings.collection.fileExtension)
+					.setPlaceholder("Collections")
+					.setValue(this.plugin.settings.collection.folderPath)
 					.onChange(async (value) => {
-						this.plugin.settings.collection.fileExtension = value;
+						this.plugin.settings.collection.folderPath = value;
 						await this.plugin.saveSettings();
-					})
-			);
+					});
+			})
+			.addButton((button) => {
+				button
+    				.setIcon("folder-open")
+					.setTooltip("Browse folders")
+					.onClick(() => {
+						void (async () => {
+							new FolderSuggestModal(
+								this.app,
+								(folder) => {
+									void (async () => {
+										this.plugin.settings.collection.folderPath =
+											folder.path;
+
+										await this.plugin.saveSettings();
+
+										this.display();
+									})();
+								}
+							).open();
+						})();
+					});
+			});
 
 		new Setting(containerEl)
 			.setName("Card name column name")
@@ -265,4 +285,34 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 					})
 			);
 	}
+}
+
+class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
+    private onChoose: (folder: TFolder) => void;
+
+    constructor(app: App, onChoose: (folder: TFolder) => void) {
+        super(app);
+        this.onChoose = onChoose;
+    }
+
+	getItems(): TFolder[] {
+		const folders = new Map<string, TFolder>();
+
+		this.app.vault.getFiles().forEach((file) => {
+			if (file.extension === "csv" && file.parent) {
+				folders.set(file.parent.path, file.parent);
+			}
+		});
+
+		return Array.from(folders.values());
+	}
+
+    getItemText(folder: TFolder): string {
+        return folder.path;
+    }
+
+    onChooseItem(folder: TFolder): void {
+        this.onChoose(folder);
+        this.close();
+    }
 }

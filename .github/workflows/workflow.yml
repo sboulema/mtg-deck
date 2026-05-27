@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  version: '1.11.${{ github.run_number }}'
+  version: '1.12.${{ github.run_number }}'
   nodeVersion: '22'
 
 jobs:
