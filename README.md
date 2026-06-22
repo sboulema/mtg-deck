@@ -156,6 +156,31 @@ Open **Settings → MTG Deck** to configure the plugin:
 | **Card name column name** | The name of the CSV column used for card names |
 | **Card count column name** | The name of the CSV column used for card counts/quantity |
 
+## Settings per deck
+
+````markdown
+```mtg-deck-show:prices
+...
+```
+````
+
+````markdown
+```mtg-deck-modern-show:prices,manacosts
+...
+```
+````
+
+Supported show values:
+
+| Value | Description |
+|---|---|
+| `prices` | Show card prices |
+| `manacosts` | Show mana cost symbols |
+| `previews` | Show card preview on hover |
+| `hyperlinks` | Show card names as hyperlinks |
+| `rarities` | Show rarity indicators |
+| `buylist` | Show buylist section |
+
 # 📦 Collection Tracking
 
 This plugin expects your collection to be stored as CSV files with the extension `.mtg.collection.csv` by default.

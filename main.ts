@@ -8,7 +8,7 @@ import {
 import { renderDecklist } from "src/renderer";
 import { ObsidianPluginMtgSettings } from "src/settings";
 import { CardCounts } from "src/collection";
-import { FORMATS } from "src/validator";
+import { parseCodeBlockOptions, applyShowOverrides } from "src/code-block-options";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
@@ -56,13 +56,25 @@ export default class ObsidianPluginMtg extends Plugin {
 			this.cardCounts = await syncCounts(vault, this.settings);
 		});
 
-		this.registerMarkdownCodeBlockProcessor("mtg-deck", async (source: string, el: HTMLElement) => {
-			await this.renderDecklist(vault, source, el, null);
-		});
+		this.registerMarkdownPostProcessor((element) => {
+			const codeBlocks = element.querySelectorAll("code[class*='language-mtg-deck']");
 
-		FORMATS.forEach(({ name }) => {
-			this.registerMarkdownCodeBlockProcessor(`mtg-deck-${name}`, async (source: string, el: HTMLElement) => {
-				await this.renderDecklist(vault, source, el, name);
+			codeBlocks.forEach(async (codeBlock) => {
+				const className = Array.from(codeBlock.classList)
+					.find(cls => cls.startsWith("language-mtg-deck")) ?? "";
+
+				const infoString = className.replace("language-", "");
+				const { format, showOverrides } = parseCodeBlockOptions(infoString);
+				const effectiveSettings = applyShowOverrides(this.settings, showOverrides);
+
+				const source = codeBlock.textContent ?? "";
+				const pre = codeBlock.parentElement;
+
+				if (pre) {
+					const container = createDiv();
+					pre.replaceWith(container);
+					await renderDecklist(container, source, this.cardCounts, effectiveSettings, format);
+				}
 			});
 		});
 	}
