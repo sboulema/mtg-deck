@@ -1,8 +1,8 @@
 {
 	"id": "mtg-deck",
 	"name": "MTG Deck",
-	"version": "1.13.104",
-	"minAppVersion": "1.1.0",
+	"version": "1.13.105",
+	"minAppVersion": "1.5.7",
 	"description": "Display your MTG decks and card lists in your notes.",
 	"author": "Samir Boulema",
 	"authorUrl": "https://github.com/sboulema",

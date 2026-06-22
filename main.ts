@@ -57,25 +57,27 @@ export default class ObsidianPluginMtg extends Plugin {
 		});
 
 		this.registerMarkdownPostProcessor((element) => {
-			const codeBlocks = element.querySelectorAll("code[class*='language-mtg-deck']");
+			void (async () => {
+				const codeBlocks = element.querySelectorAll("code[class*='language-mtg-deck']");
 
-			codeBlocks.forEach(async (codeBlock) => {
-				const className = Array.from(codeBlock.classList)
-					.find(cls => cls.startsWith("language-mtg-deck")) ?? "";
+				for (const codeBlock of Array.from(codeBlocks)) {
+					const className = Array.from(codeBlock.classList)
+						.find(cls => cls.startsWith("language-mtg-deck")) ?? "";
 
-				const infoString = className.replace("language-", "");
-				const { format, showOverrides } = parseCodeBlockOptions(infoString);
-				const effectiveSettings = applyShowOverrides(this.settings, showOverrides);
+					const infoString = className.replace("language-", "");
+					const { format, showOverrides } = parseCodeBlockOptions(infoString);
+					const effectiveSettings = applyShowOverrides(this.settings, showOverrides);
 
-				const source = codeBlock.textContent ?? "";
-				const pre = codeBlock.parentElement;
+					const source = codeBlock.textContent ?? "";
+					const pre = codeBlock.parentElement;
 
-				if (pre) {
-					const container = createDiv();
-					pre.replaceWith(container);
-					await renderDecklist(container, source, this.cardCounts, effectiveSettings, format);
+					if (pre) {
+						const container = createDiv();
+						pre.replaceWith(container);
+						await renderDecklist(container, source, this.cardCounts, effectiveSettings, format);
+					}
 				}
-			});
+			})();
 		});
 	}
 

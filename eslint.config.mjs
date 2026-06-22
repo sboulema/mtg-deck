@@ -9,21 +9,13 @@ export default defineConfig([
         "**/node_modules",
         "**/build",
         "main.js",
+        "jest/**/*",
+        "**/*.test.ts",
+        "**/*.spec.ts",
     ]),
-
     js.configs.recommended,
-
     ...tseslint.configs.recommended,
-
     ...obsidianmd.configs.recommended,
-
-    {
-        files: ["jest/**/*", "**/*.test.ts", "**/*.spec.ts"],
-        rules: {
-            "obsidianmd/no-nodejs-modules": "off",
-        },
-    },
-
     {
         languageOptions: {
             globals: {

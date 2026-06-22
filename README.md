@@ -201,6 +201,20 @@ Ledger Shredder,5
 
 Note that your collection will consist of the merged result of all of your CSV files.
 
+# 🔍 Obsidian Plugin Scorecard
+
+## Network Requests
+
+This plugin makes network requests to the [Scryfall API](https://scryfall.com/docs/api) to fetch card data, images, and prices. Requests are only made when rendering a decklist code block and are batched to minimize the number of calls. No user data is sent to Scryfall — only card names and set codes are used to identify cards.
+
+## Vault Access
+
+This plugin enumerates files in your vault to find collection CSV files in the configured collection folder. Only files with the `.csv` extension in the configured folder are read. No other vault files are accessed.
+
+## CSS
+
+Some styles use `!important` to override Obsidian's built-in styles where necessary, specifically to ensure card preview images are not clipped in edit mode. These overrides are minimal and scoped as tightly as possible.
+
 # 🙏 Credits
 
 Built with the [Obsidian Plugin API](https://github.com/obsidianmd/obsidian-api) and [Scryfall API](https://scryfall.com/docs/api).

@@ -231,7 +231,7 @@ const validateMaxCopies = (
 
             if (cardCounts[cardId] > formatDef.maxCopies) {
                 return [{
-                    type: "max_copies" as ValidationErrorType,
+                    type: "max_copies",
                     message: `${line.cardName} has ${cardCounts[cardId]} copies, maximum is ${formatDef.maxCopies} for ${format}`,
                     cardName: line.cardName,
                 }];
@@ -342,7 +342,7 @@ const validateColorIdentity = (
 
             if (invalidColors.length > 0) {
                 return [{
-                    type: "color_identity" as ValidationErrorType,
+                    type: "color_identity",
                     message: `${line.cardName} has color identity [${invalidColors.join(", ")}] outside commander's color identity`,
                     cardName: line.cardName,
                 }];
@@ -384,7 +384,7 @@ const validateCommanderInDeck = (
 
             if (!isInDeck) {
                 return [{
-                    type: "commander_zone" as ValidationErrorType,
+                    type: "commander_zone",
                     message: `${line.cardName} is in the command zone but not in the deck`,
                     cardName: line.cardName,
                 }];
@@ -474,7 +474,7 @@ export const validateCompanionInSideboard = (
 
             if (!isInSideboard) {
                 return [{
-                    type: "companion" as ValidationErrorType,
+                    type: "companion",
                     message: `${line.cardName} is listed as companion but not in the sideboard`,
                     cardName: line.cardName,
                 }];

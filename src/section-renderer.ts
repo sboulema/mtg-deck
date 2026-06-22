@@ -147,7 +147,7 @@ export const renderSection = (
 					cardInfo?.mana_cost ?? cardInfo?.card_faces?.[0]?.mana_cost;
 
 				const tdPaddingSize =
-					parseInt(window.getComputedStyle(document.body).getPropertyValue('--size-4-2'));
+					parseInt(window.getComputedStyle(activeDocument.body).getPropertyValue('--size-4-2'));
 
 				if (cardManaCost) {
 					const numberOfManaSymbols = (cardManaCost.match(/{/g) || []).length;
