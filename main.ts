@@ -212,6 +212,7 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 					.addOption("usd", "USD")
 					.addOption("eur", "EUR")
 					.addOption("tix", "Tix")
+					.setValue(this.plugin.settings.decklist.preferredCurrency)
 					.onChange(async (value: string) => {
 						this.plugin.settings.decklist.preferredCurrency = value as "usd" | "eur" | "tix";
 						await this.plugin.saveSettings();

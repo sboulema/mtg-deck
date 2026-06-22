@@ -284,7 +284,7 @@ const validateCommanderZoneType = (
     const cardLines = commanderLines.filter(line => line.lineType === "card");
 
     cardLines.forEach(line => {
-        const cardId = nameToId(line.cardName!);
+        const cardId = nameToId(line.cardName);
         const cardInfo = cardDataByCardId[cardId];
 
         if (!cardInfo?.type_line) {
@@ -325,7 +325,7 @@ const validateColorIdentity = (
     // Get combined color identity of all commanders
     const commanderColorIdentity = new Set(
         commanderCardLines.flatMap(line => {
-            const cardId = nameToId(line.cardName!);
+            const cardId = nameToId(line.cardName);
             return cardDataByCardId[cardId]?.color_identity ?? [];
         })
     );
@@ -333,7 +333,7 @@ const validateColorIdentity = (
     return lines
         .filter(line => line.lineType === "card" && line.cardName)
         .flatMap(line => {
-            const cardId = nameToId(line.cardName!);
+            const cardId = nameToId(line.cardName);
             const cardInfo = cardDataByCardId[cardId];
             if (!cardInfo) return [];
 
@@ -438,7 +438,7 @@ export const validateCompanionType = (
     const errors: ValidationError[] = [];
 
     cardLines.forEach(line => {
-        const cardId = nameToId(line.cardName!);
+        const cardId = nameToId(line.cardName);
         const cardInfo = cardDataByCardId[cardId];
 
         if (!cardInfo?.keywords?.includes("Companion")) {
