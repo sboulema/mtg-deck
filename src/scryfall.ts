@@ -1,6 +1,8 @@
 import { nameToId } from "./collection";
 import { promiseWrappedRequest } from "./http";
 
+const cardDataCache: Record<string, CardData> = {};
+
 export type CardIdentifier =
 	| {
 			name: string;
@@ -181,6 +183,52 @@ export const getMultipleCardData = async (
     return request(params);
 };
 
+export const fetchCardDataFromScryfall = async (
+    distinctCards: CardIdentifier[],
+    onProgress?: (fetched: number, total: number) => void
+): Promise<Record<string, CardData>> => {
+    const uncachedCards = distinctCards.filter(identifier => {
+        const key = "name" in identifier
+            ? identifier.name
+            : `${identifier.set}-${identifier.collector_number}`;
+        return !cardDataCache[key];
+    });
+
+    if (uncachedCards.length > 0) {
+        const batches: CardIdentifier[][] = [];
+        let currentBatch: CardIdentifier[] = [];
+        batches.push(currentBatch);
+
+        uncachedCards.forEach(identifier => {
+            if (currentBatch.length === MAX_SCRYFALL_BATCH_SIZE) {
+                batches.push(currentBatch);
+                currentBatch = [];
+            }
+            currentBatch.push(identifier);
+        });
+        batches.push(currentBatch);
+
+        let fetched = 0;
+        const total = distinctCards.length;
+
+        for (const batch of batches) {
+            const result = await getMultipleCardData(batch);
+            result.data.forEach((card: CardData) => {
+                if (card.name) {
+                    cardDataCache[nameToId(card.name)] = card;
+                }
+                if (card.printed_name) {
+                    cardDataCache[nameToId(card.printed_name)] = card;
+                }
+            });
+            fetched += batch.length;
+            onProgress?.(fetched, total);
+        }
+    }
+
+    return cardDataCache;
+};
+
 /**
  * Fetches card data from the Scryfall API for a list of distinct cards.
  * Cards are fetched in batches of {@link MAX_SCRYFALL_BATCH_SIZE} to respect
@@ -193,7 +241,7 @@ export const getMultipleCardData = async (
  * @param distinctCards - List of distinct card identifiers to fetch
  * @returns A record of card data indexed by normalized card name
  */
-export const fetchCardDataFromScryfall = async (
+export const fetchFromScryfall = async (
 	distinctCards: CardIdentifier[]
 ): Promise<Record<string, CardData>> => {
 	const batches: CardIdentifier[][] = [];

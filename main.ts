@@ -1,14 +1,18 @@
 import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, TFolder, Vault } from "obsidian";
 import {
+	CardCollection,
 	DEFAULT_COLLECTION_COUNT_COLUMN,
 	DEFAULT_COLLECTION_FOLDER_PATH,
 	DEFAULT_COLLECTION_NAME_COLUMN,
+	syncCollections,
 	syncCounts,
 } from "src/collection";
 import { renderDecklist } from "src/renderer";
 import { ObsidianPluginMtgSettings } from "src/settings";
 import { CardCounts } from "src/collection";
 import { parseCodeBlockOptions, applyShowOverrides } from "src/code-block-options";
+import { CollectionModal } from "src/collection-modal";
+import { renderCollection } from "src/collection-renderer";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
@@ -32,6 +36,7 @@ export default class ObsidianPluginMtg extends Plugin {
 
 	// This keeps a record of the collection in memory
 	cardCounts: CardCounts;
+	collections: CardCollection[] = [];
 
 	async onload() {
 		await this.loadSettings();
@@ -43,17 +48,25 @@ export default class ObsidianPluginMtg extends Plugin {
 
 		vault.on("modify", async (file) => {
 			if (file.name.endsWith(".csv")) {
-				const settings = this.settings;
-				const collectionFolderPath =
-					settings.collection?.folderPath || "";
-				if (file.parent?.path === collectionFolderPath) {
-					this.cardCounts = await syncCounts(vault, settings);
+				const collectionFolderPath = this.settings.collection?.folderPath || "";
+				if (file.parent?.path.startsWith(collectionFolderPath)) {
+					this.cardCounts = await syncCounts(vault, this.settings);
+					this.collections = await syncCollections(vault, this.settings);
 				}
 			}
 		});
 
 		this.app.workspace.onLayoutReady(async () => {
 			this.cardCounts = await syncCounts(vault, this.settings);
+			this.collections = await syncCollections(vault, this.settings);
+		});
+
+		this.addCommand({
+			id: "view-collection",
+			name: "View collection",
+			callback: () => {
+				new CollectionModal(this.app, this.collections).open();
+			},
 		});
 
 		this.registerMarkdownPostProcessor((element) => {
@@ -79,6 +92,13 @@ export default class ObsidianPluginMtg extends Plugin {
 				}
 			})();
 		});
+
+		this.registerMarkdownCodeBlockProcessor(
+			"mtg-collection",
+			(_source, el) => {
+				void renderCollection(el, this.collections);
+			}
+		);
 	}
 
 	onunload() {}
