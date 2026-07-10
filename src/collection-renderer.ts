@@ -1,5 +1,5 @@
 import { CardCollection, nameToId } from "./collection";
-import { CardData, fetchCardDataFromScryfall } from "./scryfall";
+import { CardData, fetchCardDataFromScryfallCached } from "./scryfall";
 
 const renderRows = (
     tbody: HTMLElement,
@@ -107,7 +107,7 @@ export const renderCollection = async (
 
     // Fetch card data and re-render
     const identifiers = allCardNames.map(name => ({ name }));
-    const cardDataByCardId = await fetchCardDataFromScryfall(
+    const cardDataByCardId = await fetchCardDataFromScryfallCached(
         identifiers,
         (fetched, total) => {
             progressEl.textContent = `${fetched} / ${total}`;

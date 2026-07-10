@@ -1,18 +1,21 @@
-import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, TFolder, Vault } from "obsidian";
+import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, TFolder } from "obsidian";
 import {
-	CardCollection,
-	DEFAULT_COLLECTION_COUNT_COLUMN,
-	DEFAULT_COLLECTION_FOLDER_PATH,
-	DEFAULT_COLLECTION_NAME_COLUMN,
-	syncCollections,
+    CardCollection,
+    CardCounts,
+    DEFAULT_COLLECTION_COUNT_COLUMN,
+    DEFAULT_COLLECTION_FOLDER_PATH,
+    DEFAULT_COLLECTION_NAME_COLUMN,
+    hashCollectionContents,
+    processCollectionFiles,
+    syncCollections,
 	syncCounts,
 } from "src/collection";
 import { renderDecklist } from "src/renderer";
 import { ObsidianPluginMtgSettings } from "src/settings";
-import { CardCounts } from "src/collection";
 import { parseCodeBlockOptions, applyShowOverrides } from "src/code-block-options";
 import { CollectionModal } from "src/collection-modal";
 import { renderCollection } from "src/collection-renderer";
+import { loadCache, getCache, clearCache } from "src/cache";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
@@ -50,15 +53,24 @@ export default class ObsidianPluginMtg extends Plugin {
 			if (file.name.endsWith(".csv")) {
 				const collectionFolderPath = this.settings.collection?.folderPath || "";
 				if (file.parent?.path.startsWith(collectionFolderPath)) {
-					this.cardCounts = await syncCounts(vault, this.settings);
 					this.collections = await syncCollections(vault, this.settings);
+					this.cardCounts = await syncCounts(vault, this.settings);
+					clearCache();
 				}
 			}
 		});
 
 		this.app.workspace.onLayoutReady(async () => {
-			this.cardCounts = await syncCounts(vault, this.settings);
+			const fileContents = await processCollectionFiles(vault, this.settings);
+			const hash = hashCollectionContents(fileContents);
+
+			const savedData = await this.loadData();
+			if (savedData?.collectionHash === hash && savedData?.cardDataCache) {
+				loadCache(savedData.cardDataCache);
+			}
+
 			this.collections = await syncCollections(vault, this.settings);
+			this.cardCounts = await syncCounts(vault, this.settings);
 		});
 
 		this.addCommand({
@@ -101,41 +113,39 @@ export default class ObsidianPluginMtg extends Plugin {
 		);
 	}
 
-	onunload() {}
+	onunload() {
+		void (async () => {
+			const fileContents = await processCollectionFiles(
+				this.app.vault,
+				this.settings
+			);
+			const hash = hashCollectionContents(fileContents);
+			const data = await this.loadData() ?? {};
+
+			await this.saveData({
+				...data,
+				settings: this.settings,
+				collectionHash: hash,
+				cardDataCache: getCache(),
+			});
+		})();
+	}
 
 	async loadSettings() {
+		const data = await this.loadData();
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData() as Partial<ObsidianPluginMtgSettings>
+			data?.settings as Partial<ObsidianPluginMtgSettings>
 		);
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-
-	async renderDecklist(vault: Vault, source: string, el: HTMLElement, format: string | null = null) {
-		// Sync card counts once if they haven't been already
-		if (!this.cardCounts) {
-			this.cardCounts = await syncCounts(vault, this.settings);
-		}
-
-		try {
-			await renderDecklist(
-				el,
-				source,
-				this.cardCounts,
-				this.settings,
-				format
-			);
-		} catch (err) {
-			console.error(err);
-			el.createDiv({
-				text: String(err),
-				cls: "obsidian-plugin-mtg-error",
-			});
-		}
+		const data = await this.loadData() ?? {};
+		await this.saveData({
+			...data,
+			settings: this.settings,
+		});
 	}
 }
 

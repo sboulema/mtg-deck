@@ -109,3 +109,8 @@ export const syncCollections = async (
 ): Promise<CardCollection[]> => {
     return processCollectionFiles(vault, settings);
 };
+
+export const hashCollectionContents = (contents: CardCollection[]): string => {
+    const combined = contents.map(c => Object.entries(c.counts).join("")).join("");
+    return `${contents.length}-${combined.length}`;
+};
