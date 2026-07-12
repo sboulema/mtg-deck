@@ -6,9 +6,8 @@ import {
     DEFAULT_COLLECTION_FOLDER_PATH,
     DEFAULT_COLLECTION_NAME_COLUMN,
     hashCollectionContents,
-    processCollectionFiles,
+    mergeCollections,
     syncCollections,
-	syncCounts,
 } from "src/collection";
 import { renderDecklist } from "src/renderer";
 import { ObsidianPluginMtgSettings } from "src/settings";
@@ -54,23 +53,22 @@ export default class ObsidianPluginMtg extends Plugin {
 				const collectionFolderPath = this.settings.collection?.folderPath || "";
 				if (file.parent?.path.startsWith(collectionFolderPath)) {
 					this.collections = await syncCollections(vault, this.settings);
-					this.cardCounts = await syncCounts(vault, this.settings);
+					this.cardCounts = mergeCollections(this.collections);
 					clearCache();
 				}
 			}
 		});
 
 		this.app.workspace.onLayoutReady(async () => {
-			const fileContents = await processCollectionFiles(vault, this.settings);
-			const hash = hashCollectionContents(fileContents);
+			this.collections = await syncCollections(vault, this.settings);
+			this.cardCounts = mergeCollections(this.collections);
+
+			const hash = hashCollectionContents(this.collections);
 
 			const savedData = await this.loadData();
 			if (savedData?.collectionHash === hash && savedData?.cardDataCache) {
 				loadCache(savedData.cardDataCache);
 			}
-
-			this.collections = await syncCollections(vault, this.settings);
-			this.cardCounts = await syncCounts(vault, this.settings);
 		});
 
 		this.addCommand({
@@ -115,11 +113,7 @@ export default class ObsidianPluginMtg extends Plugin {
 
 	onunload() {
 		void (async () => {
-			const fileContents = await processCollectionFiles(
-				this.app.vault,
-				this.settings
-			);
-			const hash = hashCollectionContents(fileContents);
+			const hash = hashCollectionContents(this.collections);
 			const data = await this.loadData() ?? {};
 
 			await this.saveData({
@@ -346,6 +340,10 @@ class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
 		this.app.vault.getFiles().forEach((file) => {
 			if (file.extension === "csv" && file.parent) {
 				folders.set(file.parent.path, file.parent);
+
+				if (file.parent.parent) {
+					folders.set(file.parent.parent.path, file.parent.parent);
+				}
 			}
 		});
 

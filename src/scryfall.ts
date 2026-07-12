@@ -194,7 +194,8 @@ export const getMultipleCardData = async (
  * @returns A record of card data indexed by normalized card name
  */
 export const fetchCardDataFromScryfall = async (
-    distinctCards: CardIdentifier[]
+    distinctCards: CardIdentifier[],
+    onProgress?: (fetched: number, total: number) => void
 ): Promise<Record<string, CardData>> => {
     const batches: CardIdentifier[][] = [];
     let currentBatch: CardIdentifier[] = [];
@@ -210,14 +211,14 @@ export const fetchCardDataFromScryfall = async (
 
     batches.push(currentBatch);
 
-    const cardDataInBatches: ScryfallResponse[] = await Promise.all(
-        batches.map((batch) => getMultipleCardData(batch))
-    );
-
     const cardDataByCardId: Record<string, CardData> = {};
+    let fetched = 0;
+    const total = distinctCards.length;
 
-    cardDataInBatches.forEach((batch) => {
-        batch.data.forEach((card: CardData) => {
+    for (const batch of batches) {
+        const result: ScryfallResponse = await getMultipleCardData(batch);
+
+        result.data.forEach((card: CardData) => {
             if (card.name) {
                 cardDataByCardId[nameToId(card.name)] = card;
             }
@@ -225,7 +226,10 @@ export const fetchCardDataFromScryfall = async (
                 cardDataByCardId[nameToId(card.printed_name)] = card;
             }
         });
-    });
+
+        fetched += batch.length;
+        onProgress?.(fetched, total);
+    }
 
     return cardDataByCardId;
 };
@@ -252,13 +256,13 @@ export const fetchCardDataFromScryfallCached = async (
     });
 
     if (uncachedCards.length > 0) {
-        const freshData = await fetchCardDataFromScryfall(uncachedCards);
+        const freshData = await fetchCardDataFromScryfall(uncachedCards, onProgress);
         Object.entries(freshData).forEach(([key, data]) => {
             setCachedCardData(key, data);
         });
+    } else {
+        onProgress?.(distinctCards.length, distinctCards.length);
     }
-
-    onProgress?.(distinctCards.length, distinctCards.length);
 
     return getCachedCardData();
 };

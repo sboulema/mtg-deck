@@ -90,19 +90,6 @@ export const processCollectionFiles = async (
     )).filter((c): c is CardCollection => c !== null);
 };
 
-export const syncCounts = async (
-    vault: Vault,
-    settings: ObsidianPluginMtgSettings
-): Promise<CardCounts> => {
-    const collections = await processCollectionFiles(vault, settings);
-    return collections.reduce((acc, collection) => {
-        Object.entries(collection.counts).forEach(([name, count]) => {
-            acc[name] = (acc[name] ?? 0) + count;
-        });
-        return acc;
-    }, {} as CardCounts);
-};
-
 export const syncCollections = async (
     vault: Vault,
     settings: ObsidianPluginMtgSettings
@@ -113,4 +100,13 @@ export const syncCollections = async (
 export const hashCollectionContents = (contents: CardCollection[]): string => {
     const combined = contents.map(c => Object.entries(c.counts).join("")).join("");
     return `${contents.length}-${combined.length}`;
+};
+
+export const mergeCollections = (collections: CardCollection[]): CardCounts => {
+    return collections.reduce((acc, collection) => {
+        Object.entries(collection.counts).forEach(([name, count]) => {
+            acc[name] = (acc[name] ?? 0) + count;
+        });
+        return acc;
+    }, {} as CardCounts);
 };
