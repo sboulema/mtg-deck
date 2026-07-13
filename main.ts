@@ -14,7 +14,7 @@ import { ObsidianPluginMtgSettings } from "src/settings";
 import { parseCodeBlockOptions, applyShowOverrides } from "src/code-block-options";
 import { CollectionModal } from "src/collection-modal";
 import { renderCollection } from "src/collection-renderer";
-import { loadCache, getCache, clearCache } from "src/cache";
+import { loadCache, getCache, clearCache, CachedCardData } from "src/cache";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
@@ -31,6 +31,16 @@ const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 		showManaCosts: true,
 		showCardRarities: true,
 	},
+};
+
+interface PluginData {
+    settings?: Partial<ObsidianPluginMtgSettings>;
+    collectionHash?: string;
+    cardDataCache?: Record<string, CachedCardData>;
+}
+
+const loadPluginData = async (plugin: Plugin): Promise<PluginData> => {
+    return (await plugin.loadData() as PluginData) ?? {};
 };
 
 export default class ObsidianPluginMtg extends Plugin {
@@ -65,8 +75,8 @@ export default class ObsidianPluginMtg extends Plugin {
 
 			const hash = hashCollectionContents(this.collections);
 
-			const savedData = await this.loadData();
-			if (savedData?.collectionHash === hash && savedData?.cardDataCache) {
+			const savedData = await loadPluginData(this);
+			if (savedData.collectionHash === hash && savedData.cardDataCache) {
 				loadCache(savedData.cardDataCache);
 			}
 		});
@@ -114,7 +124,7 @@ export default class ObsidianPluginMtg extends Plugin {
 	onunload() {
 		void (async () => {
 			const hash = hashCollectionContents(this.collections);
-			const data = await this.loadData() ?? {};
+			const data = await loadPluginData(this);
 
 			await this.saveData({
 				...data,
@@ -126,16 +136,16 @@ export default class ObsidianPluginMtg extends Plugin {
 	}
 
 	async loadSettings() {
-		const data = await this.loadData();
+		const data = await loadPluginData(this);
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			data?.settings as Partial<ObsidianPluginMtgSettings>
+			data.settings
 		);
 	}
 
 	async saveSettings() {
-		const data = await this.loadData() ?? {};
+		const data = await loadPluginData(this);
 		await this.saveData({
 			...data,
 			settings: this.settings,

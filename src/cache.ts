@@ -1,6 +1,6 @@
 import { CardData } from "./scryfall";
 
-interface CachedCardData {
+export interface CachedCardData {
     data: CardData;
 }
 

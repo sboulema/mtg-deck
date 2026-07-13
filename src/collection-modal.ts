@@ -1,5 +1,5 @@
 import { App, Modal } from "obsidian";
-import { CardCollection, CardCounts } from "./collection";
+import { CardCollection } from "./collection";
 import { renderCollection } from "./collection-renderer";
 
 export class CollectionModal extends Modal {
