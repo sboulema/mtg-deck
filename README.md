@@ -137,8 +137,8 @@ The following rules are validated in the section footer:
 - **Card legality** — flags banned/not legal/restricted cards
 - **Deck size** — flags when the deck is too small or too large for the format
 - **Sideboard size** — flags when the sideboard exceeds the maximum for the format
-- **Number of copies** - flags when a card is included more than the allowed times (4/1), handles cards like Hare Apparent!
-- **Commander rules** - flags when a card is not a legal commander, or cards in the deck that or outside of the color identity
+- **Number of copies** — flags when a card is included more than the allowed times (4/1), handles cards like Hare Apparent!
+- **Commander rules** — flags when a card is not a legal commander, or cards in the deck that are outside of the color identity
 
 # ⚙️ Settings
 
@@ -183,13 +183,11 @@ Supported show values:
 
 # 📦 Collection Tracking
 
-This plugin expects your collection to be stored as CSV files with the extension `.mtg.collection.csv` by default.
+This plugin tracks how many copies of each card you own by reading CSV files from a configurable folder. Cards where you don't own enough copies are highlighted in red, and a count shows owned vs. needed (e.g. `2 / 4`). A **Buylist** section is automatically shown at the bottom when you're missing cards.
 
-These files are expected to be properly formed CSVs with a Name and a Count column. Column names can be configured through the settings.
+Collection CSV files must have at least two columns: one for the card name and one for the count. Column names are configurable in settings and default to `Name` and `Count`. Multiple CSV files are supported — the plugin merges all files in the configured folder and its subfolders.
 
-Cards where you don't own enough copies are highlighted in red, and a count shows owned vs. needed (e.g. `2 / 4`). A **Buylist** section is automatically shown at the bottom when you're missing cards.
-
-## Example CSV Files
+## Example CSV File
 
 ```
 Name,Count
@@ -199,17 +197,30 @@ Delver of Secrets // Insectile Aberration,8
 Ledger Shredder,5
 ```
 
-Note that your collection will consist of the merged result of all of your CSV files.
+## Viewing Your Collection
+
+You can view your entire collection in two ways:
+
+**Command** — open the command palette and run `MTG Deck: View collection`. This opens a modal with your full collection, showing counts per collection file, mana costs, and rarity indicators. A search box lets you filter by card name.
+
+**Code block** — embed your collection in any note using the `mtg-collection` code block:
+
+````markdown
+```mtg-collection
+```
+````
+
+This renders an inline table with all your cards, per-file counts, a grand total column, and a search filter. Card data is loaded from Scryfall and a progress indicator shows loading status.
 
 # 🔍 Obsidian Plugin Scorecard
 
 ## Network Requests
 
-This plugin makes network requests to the [Scryfall API](https://scryfall.com/docs/api) to fetch card data, images, and prices. Requests are only made when rendering a decklist code block and are batched to minimize the number of calls. No user data is sent to Scryfall — only card names and set codes are used to identify cards.
+This plugin makes network requests to the [Scryfall API](https://scryfall.com/docs/api) to fetch card data, images, and prices. Requests are only made when rendering a decklist or collection code block and are batched to minimize the number of calls. Fetched card data is cached for the duration of the session. No user data is sent to Scryfall — only card names and set codes are used to identify cards.
 
 ## Vault Access
 
-This plugin enumerates files in your vault to find collection CSV files in the configured collection folder. Only files with the `.csv` extension in the configured folder are read. No other vault files are accessed.
+This plugin enumerates files in your vault to find collection CSV files in the configured collection folder and its subfolders. Only files with the `.csv` extension are read. No other vault files are accessed.
 
 ## CSS
 

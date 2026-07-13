@@ -77,10 +77,6 @@
     width: 18px;
 }
 
-.card-image {
-    border-radius: 8px;
-}
-
 span.card-name {
 	flex: 2;
 }
@@ -88,6 +84,11 @@ span.card-name {
 span.comment {
 	color: #999999;
 	font-style: italic;
+}
+
+.card-image {
+    border-radius: 8px;
+    width: 200px;
 }
 
 .card-image-container {
@@ -227,4 +228,28 @@ span.comment {
     padding: 2px 6px;
     font-size: 0.85em;
     font-weight: bold;
+}
+
+.collection__search {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+}
+
+.collection__loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.collection__spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--background-modifier-border);
+    border-top-color: var(--interactive-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }

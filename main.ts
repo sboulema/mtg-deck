@@ -1,14 +1,20 @@
-import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, TFolder, Vault } from "obsidian";
+import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, TFolder } from "obsidian";
 import {
-	DEFAULT_COLLECTION_COUNT_COLUMN,
-	DEFAULT_COLLECTION_FOLDER_PATH,
-	DEFAULT_COLLECTION_NAME_COLUMN,
-	syncCounts,
+    CardCollection,
+    CardCounts,
+    DEFAULT_COLLECTION_COUNT_COLUMN,
+    DEFAULT_COLLECTION_FOLDER_PATH,
+    DEFAULT_COLLECTION_NAME_COLUMN,
+    hashCollectionContents,
+    mergeCollections,
+    syncCollections,
 } from "src/collection";
 import { renderDecklist } from "src/renderer";
 import { ObsidianPluginMtgSettings } from "src/settings";
-import { CardCounts } from "src/collection";
 import { parseCodeBlockOptions, applyShowOverrides } from "src/code-block-options";
+import { CollectionModal } from "src/collection-modal";
+import { renderCollection } from "src/collection-renderer";
+import { loadCache, getCache, clearCache } from "src/cache";
 
 const DEFAULT_SETTINGS: ObsidianPluginMtgSettings = {
 	collection: {
@@ -32,6 +38,7 @@ export default class ObsidianPluginMtg extends Plugin {
 
 	// This keeps a record of the collection in memory
 	cardCounts: CardCounts;
+	collections: CardCollection[] = [];
 
 	async onload() {
 		await this.loadSettings();
@@ -43,17 +50,33 @@ export default class ObsidianPluginMtg extends Plugin {
 
 		vault.on("modify", async (file) => {
 			if (file.name.endsWith(".csv")) {
-				const settings = this.settings;
-				const collectionFolderPath =
-					settings.collection?.folderPath || "";
-				if (file.parent?.path === collectionFolderPath) {
-					this.cardCounts = await syncCounts(vault, settings);
+				const collectionFolderPath = this.settings.collection?.folderPath || "";
+				if (file.parent?.path.startsWith(collectionFolderPath)) {
+					this.collections = await syncCollections(vault, this.settings);
+					this.cardCounts = mergeCollections(this.collections);
+					clearCache();
 				}
 			}
 		});
 
 		this.app.workspace.onLayoutReady(async () => {
-			this.cardCounts = await syncCounts(vault, this.settings);
+			this.collections = await syncCollections(vault, this.settings);
+			this.cardCounts = mergeCollections(this.collections);
+
+			const hash = hashCollectionContents(this.collections);
+
+			const savedData = await this.loadData();
+			if (savedData?.collectionHash === hash && savedData?.cardDataCache) {
+				loadCache(savedData.cardDataCache);
+			}
+		});
+
+		this.addCommand({
+			id: "view-collection",
+			name: "View collection",
+			callback: () => {
+				new CollectionModal(this.app, this.collections).open();
+			},
 		});
 
 		this.registerMarkdownPostProcessor((element) => {
@@ -79,43 +102,44 @@ export default class ObsidianPluginMtg extends Plugin {
 				}
 			})();
 		});
+
+		this.registerMarkdownCodeBlockProcessor(
+			"mtg-collection",
+			(_source, el) => {
+				void renderCollection(el, this.collections);
+			}
+		);
 	}
 
-	onunload() {}
+	onunload() {
+		void (async () => {
+			const hash = hashCollectionContents(this.collections);
+			const data = await this.loadData() ?? {};
+
+			await this.saveData({
+				...data,
+				settings: this.settings,
+				collectionHash: hash,
+				cardDataCache: getCache(),
+			});
+		})();
+	}
 
 	async loadSettings() {
+		const data = await this.loadData();
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData() as Partial<ObsidianPluginMtgSettings>
+			data?.settings as Partial<ObsidianPluginMtgSettings>
 		);
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-
-	async renderDecklist(vault: Vault, source: string, el: HTMLElement, format: string | null = null) {
-		// Sync card counts once if they haven't been already
-		if (!this.cardCounts) {
-			this.cardCounts = await syncCounts(vault, this.settings);
-		}
-
-		try {
-			await renderDecklist(
-				el,
-				source,
-				this.cardCounts,
-				this.settings,
-				format
-			);
-		} catch (err) {
-			console.error(err);
-			el.createDiv({
-				text: String(err),
-				cls: "obsidian-plugin-mtg-error",
-			});
-		}
+		const data = await this.loadData() ?? {};
+		await this.saveData({
+			...data,
+			settings: this.settings,
+		});
 	}
 }
 
@@ -316,6 +340,10 @@ class FolderSuggestModal extends FuzzySuggestModal<TFolder> {
 		this.app.vault.getFiles().forEach((file) => {
 			if (file.extension === "csv" && file.parent) {
 				folders.set(file.parent.path, file.parent);
+
+				if (file.parent.parent) {
+					folders.set(file.parent.parent.path, file.parent.parent);
+				}
 			}
 		});
 

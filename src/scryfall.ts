@@ -1,14 +1,15 @@
 import { nameToId } from "./collection";
 import { promiseWrappedRequest } from "./http";
+import { getCachedCardData, setCachedCardData, hasCachedCardData } from "./cache";
 
 export type CardIdentifier =
-	| {
-			name: string;
-	  }
-	| {
-			set: string;
-			collector_number: string;
-	  };
+    | {
+            name: string;
+      }
+    | {
+            set: string;
+            collector_number: string;
+      };
 
 export interface RequestOptions {
     url: string;
@@ -21,11 +22,10 @@ export interface RequestOptions {
 
 export type Request = <T>(options: RequestOptions) => Promise<T>;
 
-// This is the maximum number of cards that can be requested at the same time
 export const MAX_SCRYFALL_BATCH_SIZE = 75;
 
 export interface CardFace {
-    object?: string; // card_face
+    object?: string;
     name?: string;
     mana_cost?: string;
     type_line?: string;
@@ -50,7 +50,7 @@ export interface CardFace {
 }
 
 export interface CardData {
-    object?: string; // card
+    object?: string;
     id?: string;
     oracle_id?: string;
     multiverse_ids?: number[];
@@ -194,41 +194,75 @@ export const getMultipleCardData = async (
  * @returns A record of card data indexed by normalized card name
  */
 export const fetchCardDataFromScryfall = async (
-	distinctCards: CardIdentifier[]
+    distinctCards: CardIdentifier[],
+    onProgress?: (fetched: number, total: number) => void
 ): Promise<Record<string, CardData>> => {
-	const batches: CardIdentifier[][] = [];
-	let currentBatch: CardIdentifier[] = [];
-	batches.push(currentBatch);
+    const batches: CardIdentifier[][] = [];
+    let currentBatch: CardIdentifier[] = [];
+    batches.push(currentBatch);
 
-	distinctCards.forEach((identifier: CardIdentifier) => {
-		if (currentBatch.length === MAX_SCRYFALL_BATCH_SIZE) {
-			batches.push(currentBatch);
-			currentBatch = [];
-		}
-		currentBatch.push(identifier);
-	});
+    distinctCards.forEach((identifier: CardIdentifier) => {
+        if (currentBatch.length === MAX_SCRYFALL_BATCH_SIZE) {
+            batches.push(currentBatch);
+            currentBatch = [];
+        }
+        currentBatch.push(identifier);
+    });
 
-	batches.push(currentBatch);
+    batches.push(currentBatch);
 
-	const cardDataInBatches: ScryfallResponse[] = await Promise.all(
-		batches.map((batch) => getMultipleCardData(batch))
-	);
+    const cardDataByCardId: Record<string, CardData> = {};
+    let fetched = 0;
+    const total = distinctCards.length;
 
-	const cardDataByCardId: Record<string, CardData> = {};
+    for (const batch of batches) {
+        const result: ScryfallResponse = await getMultipleCardData(batch);
 
-	cardDataInBatches.forEach((batch) => {
-		batch.data.forEach((card: CardData) => {
-			if (card.name) {
-				const cardId = nameToId(card.name);
-				cardDataByCardId[cardId] = card;
-			}
-
-            if (card.printed_name) {
-                const cardId = nameToId(card.printed_name);
-                cardDataByCardId[cardId] = card;
+        result.data.forEach((card: CardData) => {
+            if (card.name) {
+                cardDataByCardId[nameToId(card.name)] = card;
             }
-		});
-	});
+            if (card.printed_name) {
+                cardDataByCardId[nameToId(card.printed_name)] = card;
+            }
+        });
 
-	return cardDataByCardId;
+        fetched += batch.length;
+        onProgress?.(fetched, total);
+    }
+
+    return cardDataByCardId;
+};
+
+/**
+ * Fetches card data from the Scryfall API, using a persistent cache.
+ * Only cards not already in the cache are fetched. The cache is keyed by
+ * normalized card name and persists across renders for the duration of
+ * the session or until the collection changes.
+ *
+ * @param distinctCards - List of distinct card identifiers to fetch
+ * @param onProgress - Optional callback called when all cards are resolved
+ * @returns A record of card data indexed by normalized card name
+ */
+export const fetchCardDataFromScryfallCached = async (
+    distinctCards: CardIdentifier[],
+    onProgress?: (fetched: number, total: number) => void
+): Promise<Record<string, CardData>> => {
+    const uncachedCards = distinctCards.filter(identifier => {
+        const key = "name" in identifier
+            ? identifier.name
+            : `${identifier.set}-${identifier.collector_number}`;
+        return !hasCachedCardData(key);
+    });
+
+    if (uncachedCards.length > 0) {
+        const freshData = await fetchCardDataFromScryfall(uncachedCards, onProgress);
+        Object.entries(freshData).forEach(([key, data]) => {
+            setCachedCardData(key, data);
+        });
+    } else {
+        onProgress?.(distinctCards.length, distinctCards.length);
+    }
+
+    return getCachedCardData();
 };

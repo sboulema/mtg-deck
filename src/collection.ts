@@ -1,8 +1,15 @@
-import { TFile, Vault } from "obsidian";
+import { Vault } from "obsidian";
 import { parseCsvFile } from "./csv";
 import { ObsidianPluginMtgSettings } from "./settings";
 
 export type CardCounts = Record<string, number>;
+
+export interface CardCollection {
+    fileName: string;
+    counts: CardCounts;
+}
+
+export type CollectionData = CardCollection[];
 
 export const DEFAULT_COLLECTION_FOLDER_PATH = "Collections";
 export const DEFAULT_COLLECTION_NAME_COLUMN = "Name";
@@ -55,42 +62,51 @@ export const createCardCountsMapping = (
 export const processCollectionFiles = async (
     vault: Vault,
     settings: ObsidianPluginMtgSettings
-): Promise<string[]> => {
-    const folder = vault.getFolderByPath(
-        settings.collection.folderPath
-    );
+): Promise<CardCollection[]> => {
+    const folderPath = settings.collection.folderPath;
 
-    if (!folder) {
+    if (!folderPath) {
         return [];
     }
 
-    return (
-        (
-            await Promise.all(
-                folder.children
-                    .filter(
-                        (file): file is TFile =>
-                            file instanceof TFile &&
-                            file.extension === "csv"
-                    )
-                    .map((file) => vault.cachedRead(file).catch(() => ""))
-            )
-        )
-            // remove unreadable files
-            .filter((s) => s.length)
+    const files = vault.getFiles().filter(
+        file => file.extension === "csv" &&
+        file.parent?.path.startsWith(folderPath)
     );
+
+    if (files.length === 0) {
+        return [];
+    }
+
+    return (await Promise.all(
+        files.map(async file => {
+            const content = await vault.cachedRead(file).catch(() => "");
+            if (!content.length) return null;
+            return {
+                fileName: file.basename,
+                counts: createCardCountsMapping([content], settings),
+            };
+        })
+    )).filter((c): c is CardCollection => c !== null);
 };
 
-export const syncCounts = async (
+export const syncCollections = async (
     vault: Vault,
     settings: ObsidianPluginMtgSettings
-): Promise<CardCounts> => {
-    // Sync collection
-    const collectionContents: string[] = await processCollectionFiles(
-        vault,
-        settings
-    );
+): Promise<CardCollection[]> => {
+    return processCollectionFiles(vault, settings);
+};
 
-    // Create consolidated collection dictionary
-    return createCardCountsMapping(collectionContents, settings);
+export const hashCollectionContents = (contents: CardCollection[]): string => {
+    const combined = contents.map(c => Object.entries(c.counts).join("")).join("");
+    return `${contents.length}-${combined.length}`;
+};
+
+export const mergeCollections = (collections: CardCollection[]): CardCounts => {
+    return collections.reduce((acc, collection) => {
+        Object.entries(collection.counts).forEach(([name, count]) => {
+            acc[name] = (acc[name] ?? 0) + count;
+        });
+        return acc;
+    }, {} as CardCounts);
 };
