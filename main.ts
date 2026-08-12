@@ -1,4 +1,4 @@
-import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, TFolder } from "obsidian";
+import { App, FuzzySuggestModal, Plugin, PluginSettingTab, Setting, SettingGroup, TFolder } from "obsidian";
 import {
     CardCollection,
     CardCounts,
@@ -161,178 +161,206 @@ class ObsidianPluginMtgSettingsTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	display(): void {
-		const { containerEl } = this;
+	override getControlValue(key: string): unknown {
+		switch (key) {
+			case "collection.nameColumn":
+				return this.plugin.settings.collection.nameColumn;
+			case "collection.countColumn":
+				return this.plugin.settings.collection.countColumn;
+			case "decklist.preferredCurrency":
+				return this.plugin.settings.decklist.preferredCurrency;
+			case "decklist.showCardNamesAsHyperlinks":
+				return this.plugin.settings.decklist.showCardNamesAsHyperlinks;
+			case "decklist.showCardPreviews":
+				return this.plugin.settings.decklist.showCardPreviews;
+			case "decklist.showBuylist":
+				return this.plugin.settings.decklist.showBuylist;
+			case "decklist.showCardPrices":
+				return this.plugin.settings.decklist.showCardPrices;
+			case "decklist.showManaCosts":
+				return this.plugin.settings.decklist.showManaCosts;
+			case "decklist.showCardRarities":
+				return this.plugin.settings.decklist.showCardRarities;
+			default:
+				return undefined;
+		}
+	}
 
-		containerEl.empty();
+	override setControlValue(
+		key: string,
+		value: unknown
+	): void | Promise<void> {
+		switch (key) {
+			case "collection.nameColumn":
+				this.plugin.settings.collection.nameColumn = String(value);
+				break;
+			case "collection.countColumn":
+				this.plugin.settings.collection.countColumn = String(value);
+				break;
+			case "decklist.preferredCurrency":
+				this.plugin.settings.decklist.preferredCurrency =
+					value as "usd" | "eur" | "tix";
+				break;
+			case "decklist.showCardNamesAsHyperlinks":
+				this.plugin.settings.decklist.showCardNamesAsHyperlinks =
+					Boolean(value);
+				break;
+			case "decklist.showCardPreviews":
+				this.plugin.settings.decklist.showCardPreviews = Boolean(value);
+				break;
+			case "decklist.showBuylist":
+				this.plugin.settings.decklist.showBuylist = Boolean(value);
+				break;
+			case "decklist.showCardPrices":
+				this.plugin.settings.decklist.showCardPrices = Boolean(value);
+				break;
+			case "decklist.showManaCosts":
+				this.plugin.settings.decklist.showManaCosts = Boolean(value);
+				break;
+			case "decklist.showCardRarities":
+				this.plugin.settings.decklist.showCardRarities = Boolean(value);
+				break;
+			default:
+				return;
+		}
 
-		new Setting(containerEl)
-			.setName("Collection")
-			.setHeading()
+		return this.plugin.saveSettings();
+	}
 
-		// Collection CSV setting
-		new Setting(containerEl)
-			.setName("Collection folder")
-			.setDesc("Folder containing your collection CSV files")
-			.addText((text) => {
-				text
-					.setPlaceholder("Collections")
-					.setValue(this.plugin.settings.collection.folderPath)
-					.onChange(async (value) => {
-						this.plugin.settings.collection.folderPath = value;
-						await this.plugin.saveSettings();
-					});
-			})
-			.addButton((button) => {
-				button
-    				.setIcon("folder-open")
-					.setTooltip("Browse folders")
-					.onClick(() => {
-						void (async () => {
-							new FolderSuggestModal(
-								this.app,
-								(folder) => {
-									void (async () => {
-										this.plugin.settings.collection.folderPath =
-											folder.path;
-
-										await this.plugin.saveSettings();
-
-										this.display();
-									})();
-								}
-							).open();
-						})();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName("Card name column name")
-			.setDesc("The name of the CSV column used for card names")
-			.addText((text) =>
-				text
-					.setPlaceholder("Name")
-					.setValue(this.plugin.settings.collection.nameColumn)
-					.onChange(async (value) => {
-						this.plugin.settings.collection.nameColumn = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Card count column name")
-			.setDesc("The name of the CSV column used for card counts/quantity")
-			.addText((text) =>
-				text
-					.setPlaceholder("Count")
-					.setValue(this.plugin.settings.collection.countColumn)
-					.onChange(async (value) => {
-						this.plugin.settings.collection.countColumn = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Deck list")
-			.setHeading()
-
-		new Setting(containerEl)
-			.setName("Preferred currency")
-			.setDesc(
-				"The currency you prefer when viewing card prices in your decklist"
-			)
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("usd", "USD")
-					.addOption("eur", "EUR")
-					.addOption("tix", "Tix")
-					.setValue(this.plugin.settings.decklist.preferredCurrency)
-					.onChange(async (value: string) => {
-						this.plugin.settings.decklist.preferredCurrency = value as "usd" | "eur" | "tix";
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Show card name hyperlinks")
-			.setDesc(
-				"Enables card names that link to Scryfall or purchasing sites when possible"
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(
-						this.plugin.settings.decklist.showCardNamesAsHyperlinks
-					)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.decklist.showCardNamesAsHyperlinks =
-							value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Show card images")
-			.setDesc(
-				"Enables card previews when hovering with the mouse on desktop"
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.decklist.showCardPreviews)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.decklist.showCardPreviews = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Show buylist")
-			.setDesc(
-				"Enables a buylist below your decklist with buylinks for each card"
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.decklist.showBuylist)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.decklist.showBuylist = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Show card prices")
-			.setDesc("Enables card prices to be displayed in decklists")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.decklist.showCardPrices)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.decklist.showCardPrices = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Show card mana costs")
-			.setDesc("Enables mana costs to be displayed for each card")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.decklist.showManaCosts)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.decklist.showManaCosts = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
-		new Setting(containerEl)
-			.setName("Show card rarities")
-			.setDesc("Enables card rarities to be displayed for each card")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.decklist.showCardRarities)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.decklist.showCardRarities = value;
-						await this.plugin.saveSettings();
-					})
-			);
+	override getSettingDefinitions() {
+		return [
+			{
+				type: "group" as const,
+				heading: "Collection",
+				items: [
+					{
+						name: "Collection folder",
+						desc: "Folder containing your collection CSV files",
+						render: (setting: Setting, _group: SettingGroup) => {
+							setting
+								.setName("Collection folder")
+								.setDesc(
+									"Folder containing your collection CSV files"
+								)
+								.addText((text) =>
+									text
+										.setPlaceholder("Collections")
+										.setValue(
+											this.plugin.settings.collection
+												.folderPath
+										)
+										.onChange(async (value) => {
+											this.plugin.settings.collection.folderPath =
+												value;
+											await this.plugin.saveSettings();
+										})
+								)
+								.addButton((button) => {
+									button
+										.setIcon("folder-open")
+										.setTooltip("Browse folders")
+										.onClick(() => {
+											new FolderSuggestModal(
+												this.app,
+												(folder) => {
+													this.plugin.settings.collection.folderPath =
+														folder.path;
+													void this.plugin.saveSettings();
+													this.update();
+												}
+											).open();
+										});
+								});
+						},
+					},
+					{
+						name: "Card name column name",
+						desc: "The name of the CSV column used for card names",
+						control: {
+							type: "text" as const,
+							key: "collection.nameColumn",
+							placeholder: "Name",
+						},
+					},
+					{
+						name: "Card count column name",
+						desc: "The name of the CSV column used for card counts/quantity",
+						control: {
+							type: "text" as const,
+							key: "collection.countColumn",
+							placeholder: "Count",
+						},
+					},
+				],
+			},
+			{
+				type: "group" as const,
+				heading: "Deck list",
+				items: [
+					{
+						name: "Preferred currency",
+						desc: "The currency you prefer when viewing card prices in your decklist",
+						control: {
+							type: "dropdown" as const,
+							key: "decklist.preferredCurrency",
+							options: {
+								usd: "USD",
+								eur: "EUR",
+								tix: "Tix",
+							},
+						},
+					},
+					{
+						name: "Show card name hyperlinks",
+						desc: "Enables card names that link to Scryfall or purchasing sites when possible",
+						control: {
+							type: "toggle" as const,
+							key: "decklist.showCardNamesAsHyperlinks",
+						},
+					},
+					{
+						name: "Show card images",
+						desc: "Enables card previews when hovering with the mouse on desktop",
+						control: {
+							type: "toggle" as const,
+							key: "decklist.showCardPreviews",
+						},
+					},
+					{
+						name: "Show buylist",
+						desc: "Enables a buylist below your decklist with buylinks for each card",
+						control: {
+							type: "toggle" as const,
+							key: "decklist.showBuylist",
+						},
+					},
+					{
+						name: "Show card prices",
+						desc: "Enables card prices to be displayed in decklists",
+						control: {
+							type: "toggle" as const,
+							key: "decklist.showCardPrices",
+						},
+					},
+					{
+						name: "Show card mana costs",
+						desc: "Enables mana costs to be displayed for each card",
+						control: {
+							type: "toggle" as const,
+							key: "decklist.showManaCosts",
+						},
+					},
+					{
+						name: "Show card rarities",
+						desc: "Enables card rarities to be displayed for each card",
+						control: {
+							type: "toggle" as const,
+							key: "decklist.showCardRarities",
+						},
+					},
+				],
+			},
+		];
 	}
 }
 
