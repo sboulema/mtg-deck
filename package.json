@@ -20,7 +20,7 @@
     "author": "Samir Boulema",
     "license": "MIT",
     "devDependencies": {
-        "@eslint/eslintrc": "^3.3.6",
+        "@eslint/eslintrc": "^3.3.7",
         "@eslint/js": "^10.0.1",
         "@jest/globals": "^30.5.0",
         "@types/node": "^26.4.0",
