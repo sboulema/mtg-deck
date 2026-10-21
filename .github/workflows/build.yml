@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - 'feature/**'
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -36,6 +39,7 @@ jobs:
           npm run build
 
       - name: Generate artifact attestation
+        if: github.event_name == 'push'
         uses: actions/attest@v4
         with:
           subject-path: |
