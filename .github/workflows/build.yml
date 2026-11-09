@@ -39,6 +39,9 @@ jobs:
       - name: Lint
         run: npx eslint main.ts
 
+      - name: Test
+        run: npm test
+
       - name: Build plugin
         run: npm run build
 

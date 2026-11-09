@@ -23,6 +23,11 @@ export interface SectionRenderContext {
     format: string | null;
 }
 
+const getColumnCount = (settings: ObsidianPluginMtgSettings): number =>
+	2 +
+	(settings.decklist.showManaCosts ? 1 : 0) +
+	(settings.decklist.showCardPrices ? 1 : 0);
+
 export const renderSection = (
 	containerEl: HTMLElement,
 	ctx: SectionRenderContext
@@ -83,6 +88,7 @@ export const renderSection = (
 		sectionListHeadRow.createEl("th", { text: "Price" });
 	}
 
+	const columnCount = getColumnCount(settings);
 	const sectionListBody = sectionList.createEl("tbody");
 	const sectionMissingCardCounts: CardCounts = {};
 
@@ -110,9 +116,8 @@ export const renderSection = (
 	let previousTypeOrder = -1;
 
 	sortedLines.forEach((line: Line) => {
-		const lineEl = sectionListBody.createEl("tr");
-
 		if (line.lineType === "card") {
+			const lineEl = sectionListBody.createEl("tr");
 			const cardId = nameToId(line.cardName);
 			const cardInfo = cardDataByCardId[cardId];
 			const currentTypeOrder = getTypeOrder(line, cardDataByCardId);
@@ -271,7 +276,11 @@ export const renderSection = (
 				);
 			}
 		} else if (line.lineType === "comment") {
-			lineEl.createSpan({
+			const commentCell = sectionListBody
+				.createEl("tr")
+				.createEl("td", { attr: { colspan: `${columnCount}` } });
+
+			commentCell.createSpan({
 				cls: "comment",
 				text: line.comments?.join(" ") || "",
 			});
@@ -416,12 +425,12 @@ export const renderSectionSkeleton = (
         sectionListHeadRow.createEl("th", { text: "Price" });
     }
 
+    const columnCount = getColumnCount(settings);
     const sectionListBody = sectionList.createEl("tbody");
 
     lines.forEach((line: Line) => {
-        const lineEl = sectionListBody.createEl("tr");
-
         if (line.lineType === "card") {
+            const lineEl = sectionListBody.createEl("tr");
             lineEl.setAttribute("data-card-name", line.cardName ?? "");
 
             const cardCountCell = lineEl.createEl("td");
@@ -439,13 +448,16 @@ export const renderSectionSkeleton = (
                 lineEl.createEl("td").createSpan({ cls: "card-price" });
             }
         } else if (line.lineType === "comment") {
-            lineEl.createSpan({ cls: "comment", text: line.comments?.join(" ") || "" });
+            sectionListBody
+                .createEl("tr")
+                .createEl("td", { attr: { colspan: `${columnCount}` } })
+                .createSpan({ cls: "comment", text: line.comments?.join(" ") || "" });
         }
     });
 
     sectionList.createEl("tfoot", { cls: "decklist__section-totals" })
         .createEl("tr")
-        .createEl("td", { attr: { colspan: "4" } });
+        .createEl("td", { attr: { colspan: `${columnCount}` } });
 
     return sectionContainer;
 };

@@ -4,5 +4,9 @@ module.exports = {
   preset: 'ts-jest',
   setupFiles: ['<rootDir>/jest/globalSetup.ts'],
   testEnvironment: 'jest-environment-jsdom',
-  testRegex: '(/test/.*|(\\.|/)(test|spec))\\.[jt]sx?$'
+  testRegex: '(/test/.*|(\\.|/)(test|spec))\\.[jt]sx?$',
+  moduleNameMapper: {
+    '\\.svg$': '<rootDir>/jest/svgMock.ts',
+    '^obsidian$': '<rootDir>/jest/obsidianMock.ts'
+  }
 };

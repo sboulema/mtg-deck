@@ -1,19 +1,12 @@
 import { describe, expect, test } from "@jest/globals";
 import { renderDecklist } from "./renderer";
-import { JSDOM } from "jsdom";
 import { ObsidianPluginMtgSettings } from "./settings";
 import { EXAMPLE_DECKLIST_CARD_DATA } from "../jest/fixtures/scryfall-data";
 import { CardIdentifier, CardData } from "./scryfall";
 import {
     EXAMPLE_COLLECTION,
-    EXAMPLE_DECK_1,
-    EXAMPLE_DECK_1_HTML,
-    EXAMPLE_DECK_1_HTML_WITHOUT_PRICES,
+    EXAMPLE_DECK_1
 } from "../jest/fixtures/content";
-import { format } from "path/win32";
-
-const dom = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
-const doc = dom.window.document;
 
 const fakeFetcher = (
     _distinctCards: CardIdentifier[]
@@ -41,18 +34,18 @@ describe("Renderer", () => {
     describe("#renderDecklist", () => {
         test("with prices", async () => {
             const el = await renderDecklist(
-                doc.body,
+                document.body,
                 EXAMPLE_DECK_1,
                 EXAMPLE_COLLECTION,
                 settings,
                 null,
                 fakeFetcher
             );
-            expect(el.innerHTML.trim()).toEqual(EXAMPLE_DECK_1_HTML.trim());
+            expect(el.innerHTML.trim()).toMatchSnapshot();
         });
         test("without prices", async () => {
             const el = await renderDecklist(
-                doc.body,
+                document.body,
                 EXAMPLE_DECK_1,
                 EXAMPLE_COLLECTION,
                 {
@@ -65,9 +58,7 @@ describe("Renderer", () => {
                 null,
                 fakeFetcher
             );
-            expect(el.innerHTML.trim()).toEqual(
-                EXAMPLE_DECK_1_HTML_WITHOUT_PRICES.trim()
-            );
+            expect(el.innerHTML.trim()).toMatchSnapshot();
         });
     });
 });
