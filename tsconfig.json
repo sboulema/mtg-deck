@@ -17,7 +17,8 @@
         "isolatedModules": true,
         "strictNullChecks": true,
         "esModuleInterop": true,
-        "lib": ["DOM", "ES5", "ES6", "ES7"]
+        "types": ["node"],
+        "lib": ["DOM", "DOM.Iterable", "ES2020"]
     },
     "include": ["**/*.ts"]
 }
