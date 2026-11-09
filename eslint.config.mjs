@@ -4,6 +4,14 @@ import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import { defineConfig, globalIgnores } from "eslint/config";
 
+const codeFiles = ["**/*.{ts,cts,mts,tsx,js,cjs,mjs,jsx}"];
+
+// Keep core/TS configs away from manifest.json and LICENSE
+const scoped = (configs) =>
+    configs.map((config) =>
+        config.files ? config : { ...config, files: codeFiles },
+    );
+
 export default defineConfig([
     globalIgnores([
         "**/node_modules",
@@ -13,10 +21,12 @@ export default defineConfig([
         "**/*.test.ts",
         "**/*.spec.ts",
     ]),
-    js.configs.recommended,
-    ...tseslint.configs.recommended,
+    ...scoped([js.configs.recommended]),
+    ...scoped(tseslint.configs.recommended),
     ...obsidianmd.configs.recommended,
     {
+        files: codeFiles,
+
         languageOptions: {
             globals: {
                 ...globals.node,
